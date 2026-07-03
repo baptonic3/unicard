@@ -1,0 +1,38 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model AccessItem {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  description String
+  imageUrl    String?
+  priceUSDC   Float    // e.g. 0.50 — denominated in USDC
+  chainItemId Int?     // on-chain item ID on Arbitrum (set after contract deploy)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  passes      Pass[]
+}
+
+model Pass {
+  id             String     @id @default(cuid())
+  itemId         String
+  item           AccessItem @relation(fields: [itemId], references: [id])
+  buyerAddress   String
+  buyerEmail     String?
+  particleTxId   String     // Particle UA transaction ID
+  arbitrumTxHash String?    // Arbiscan tx hash (set after on-chain issuance)
+  chainPassId    Int?       // on-chain pass ID (set after on-chain issuance)
+  status         String     @default("pending") // pending | confirmed | issued | used
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+}
