@@ -26,7 +26,7 @@
     "eslint": "9.39.4",
     "eslint-config-next": "16.2.10",
     "ethers": "^6.17.0",
-    "magic-sdk": "^33.8.0",
+    "magic-sdk": "^33.9.0",
     "next": "16.2.10",
     "postcss": "8.5.16",
     "prisma": "^5.22.0",
