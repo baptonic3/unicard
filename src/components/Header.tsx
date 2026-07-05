@@ -11,11 +11,35 @@ const Header = ({ token, setToken }: HeaderProps) => {
   const { magic } = useMagic();
   const [address, setAddress] = useState<string | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const addr = getUserAddress();
     setAddress(addr);
+    if (addr) {
+      console.log('🔑 Magic EOA Address:', addr);
+    }
   }, [token]);
+
+  const handleCopy = async () => {
+    if (!address) return;
+    try {
+      await navigator.clipboard.writeText(address);
+      setCopied(true);
+      console.log('📋 Copied EOA address:', address);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Fallback
+      const ta = document.createElement('textarea');
+      ta.value = address;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -40,9 +64,21 @@ const Header = ({ token, setToken }: HeaderProps) => {
         <nav className="header-nav">
           {token && address ? (
             <div className="header-user">
-              <div className="header-address-chip">
+              <div className="header-address-chip" onClick={handleCopy} title="Click to copy full address">
                 <span className="header-dot" />
                 <span className="address-truncate">{truncateAddress(address)}</span>
+                <span className="copy-icon">
+                  {copied ? (
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  ) : (
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                    </svg>
+                  )}
+                </span>
               </div>
               <button
                 className="btn-secondary header-logout-btn"
@@ -104,6 +140,12 @@ const Header = ({ token, setToken }: HeaderProps) => {
           background: var(--glass-bg);
           border: 1px solid var(--glass-border);
           border-radius: 20px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        .header-address-chip:hover {
+          border-color: var(--color-primary-light);
+          background: var(--bg-card-hover);
         }
         .header-dot {
           width: 8px;
@@ -111,6 +153,11 @@ const Header = ({ token, setToken }: HeaderProps) => {
           border-radius: 50%;
           background: var(--color-success);
           box-shadow: 0 0 6px var(--color-success);
+        }
+        .copy-icon {
+          display: flex;
+          align-items: center;
+          margin-left: 2px;
         }
         .header-logout-btn {
           padding: 0.5rem 1rem;
