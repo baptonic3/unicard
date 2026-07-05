@@ -1,5 +1,7 @@
 import Head from 'next/head';
 import Login from '@/components/Login';
+import DelegationCard from '@/components/DelegationCard';
+import UnifiedBalance from '@/components/UnifiedBalance';
 import { getUserAddress, truncateAddress } from '@/utils/common';
 import { useEffect, useState } from 'react';
 
@@ -31,47 +33,30 @@ export default function Home({ token, setToken }: HomeProps) {
       ) : (
         <main className="home-main fade-in">
           <div className="home-container">
-            {/* Welcome Section */}
+            {/* Welcome */}
             <section className="welcome-section">
               <h1 className="gradient-text welcome-title">Welcome back</h1>
-              <div className="welcome-address glass-card">
-                <div className="welcome-address-row">
-                  <span className="welcome-label">Your EOA</span>
-                  <span className="address-truncate" style={{ fontSize: '14px' }}>
-                    {truncateAddress(address)}
-                  </span>
-                </div>
-                <div className="welcome-address-row">
-                  <span className="welcome-label">Auth</span>
-                  <span className="welcome-value">
-                    <span className="auth-badge">✉ Email OTP</span>
-                  </span>
-                </div>
-                <div className="welcome-address-row">
-                  <span className="welcome-label">UA Mode</span>
-                  <span className="welcome-value">
-                    <span className="ua-badge">⚡ EIP-7702</span>
-                  </span>
-                </div>
+              <p className="welcome-subtitle">
+                Your EOA: <span className="address-truncate">{truncateAddress(address)}</span>
+              </p>
+            </section>
+
+            {/* Dashboard Grid */}
+            <section className="dashboard-grid">
+              <div className="dashboard-col-left">
+                <UnifiedBalance />
+              </div>
+              <div className="dashboard-col-right">
+                <DelegationCard />
               </div>
             </section>
 
-            {/* Coming Soon Section */}
+            {/* Coming Soon */}
             <section className="coming-section">
               <div className="glass-card coming-card">
                 <h3>🎫 Access Passes</h3>
                 <p>Browse and purchase event passes. Your Universal Account lets you pay from any chain.</p>
                 <span className="coming-tag">Coming Day 5</span>
-              </div>
-              <div className="glass-card coming-card">
-                <h3>💳 Unified Balance</h3>
-                <p>View your cross-chain balance across all supported tokens and networks.</p>
-                <span className="coming-tag">Coming Day 3</span>
-              </div>
-              <div className="glass-card coming-card">
-                <h3>🔗 EIP-7702 Delegation</h3>
-                <p>Delegate your EOA on Arbitrum to enable Universal Account transactions.</p>
-                <span className="coming-tag">Coming Day 3</span>
               </div>
             </section>
           </div>
@@ -82,57 +67,35 @@ export default function Home({ token, setToken }: HomeProps) {
               padding: 2rem 1.5rem;
             }
             .home-container {
-              max-width: 900px;
+              max-width: 960px;
               margin: 0 auto;
             }
             .welcome-section {
-              margin-bottom: 3rem;
+              margin-bottom: 2rem;
             }
             .welcome-title {
               font-size: 2rem;
               font-weight: 800;
-              margin-bottom: 1.5rem;
+              margin-bottom: 0.375rem;
             }
-            .welcome-address {
-              padding: 1.5rem;
-              max-width: 450px;
-            }
-            .welcome-address-row {
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              padding: 0.625rem 0;
-            }
-            .welcome-address-row:not(:last-child) {
-              border-bottom: 1px solid var(--glass-border);
-            }
-            .welcome-label {
-              color: var(--text-muted);
-              font-size: 0.8125rem;
-              font-weight: 500;
-            }
-            .welcome-value {
+            .welcome-subtitle {
+              color: var(--text-secondary);
               font-size: 0.875rem;
             }
-            .auth-badge {
-              background: rgba(124, 58, 237, 0.1);
-              color: var(--color-primary-light);
-              padding: 0.25rem 0.625rem;
-              border-radius: 6px;
-              font-size: 0.75rem;
-              font-weight: 500;
+            .dashboard-grid {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 1.25rem;
+              margin-bottom: 2rem;
             }
-            .ua-badge {
-              background: rgba(6, 182, 212, 0.1);
-              color: var(--color-accent-light);
-              padding: 0.25rem 0.625rem;
-              border-radius: 6px;
-              font-size: 0.75rem;
-              font-weight: 500;
+            @media (max-width: 768px) {
+              .dashboard-grid {
+                grid-template-columns: 1fr;
+              }
             }
             .coming-section {
               display: grid;
-              grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+              grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
               gap: 1.25rem;
             }
             .coming-card {
