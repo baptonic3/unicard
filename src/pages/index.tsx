@@ -71,8 +71,8 @@ export default function Home() {
               <div style={{ fontSize: '11px', color: '#888', marginBottom: '8px', fontFamily: 'monospace' }}>POST /api/sessions</div>
               <div style={{ color: '#fff', fontSize: '14px', whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}>
                 {`{
-  "item": "hackathon-ticket",
-  "successUrl": "https://yoursite.com/success"
+   "item": "hackathon-ticket",
+   "successUrl": "https://yoursite.com/success"
 }`}
               </div>
             </div>
