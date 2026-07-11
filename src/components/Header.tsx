@@ -1,10 +1,11 @@
 import { useMagic } from '@/hooks/MagicProvider';
 import { logout, truncateAddress, getUserAddress } from '@/utils/common';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Dispatch, SetStateAction } from 'react';
+import Link from 'next/link';
 
 interface HeaderProps {
   token: string;
-  setToken: (token: string) => void;
+  setToken: Dispatch<SetStateAction<string>>;
 }
 
 const Header = ({ token, setToken }: HeaderProps) => {
@@ -56,9 +57,11 @@ const Header = ({ token, setToken }: HeaderProps) => {
       <div className="header-inner">
         <div className="header-brand">
           <span className="header-logo gradient-text">◈</span>
-          <h1 className="header-title">
-            <span className="gradient-text">UniCard</span>
-          </h1>
+          <Link href="/" style={{ textDecoration: 'none' }}>
+            <h1 className="header-title">
+              <span className="gradient-text">UniCard</span>
+            </h1>
+          </Link>
         </div>
 
         <nav className="header-nav">

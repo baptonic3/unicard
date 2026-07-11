@@ -22,8 +22,8 @@ const UnifiedBalance = () => {
     );
   }
 
-  const totalUSD = primaryAssets?.totalAmountInUSD
-    ? parseFloat(primaryAssets.totalAmountInUSD).toFixed(2)
+  const totalUSD = primaryAssets?.totalAmountInUSD != null
+    ? Number(primaryAssets.totalAmountInUSD).toFixed(2)
     : '0.00';
 
   const assets = primaryAssets?.assets || [];
