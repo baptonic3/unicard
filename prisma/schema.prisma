@@ -11,16 +11,17 @@ datasource db {
 }
 
 model AccessItem {
-  id          String   @id @default(cuid())
-  slug        String   @unique
-  title       String
-  description String
-  imageUrl    String?
-  priceUSDC   Float    // e.g. 0.50 — denominated in USDC
-  chainItemId Int?     // on-chain item ID on Arbitrum (set after contract deploy)
-  active      Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  passes      Pass[]
+  id              String            @id @default(cuid())
+  slug            String            @unique
+  title           String
+  description     String
+  imageUrl        String?
+  priceUSDC       Float
+  chainItemId     Int?
+  active          Boolean           @default(true)
+  createdAt       DateTime          @default(now())
+  passes          Pass[]
+  checkoutSessions CheckoutSession[]
 }
 
 model Pass {
@@ -29,10 +30,26 @@ model Pass {
   item           AccessItem @relation(fields: [itemId], references: [id])
   buyerAddress   String
   buyerEmail     String?
-  particleTxId   String     // Particle UA transaction ID
-  arbitrumTxHash String?    // Arbiscan tx hash (set after on-chain issuance)
-  chainPassId    Int?       // on-chain pass ID (set after on-chain issuance)
-  status         String     @default("pending") // pending | confirmed | issued | used
+  particleTxId   String
+  arbitrumTxHash String?
+  chainPassId    Int?
+  status         String     @default("pending")
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
+}
+
+model CheckoutSession {
+  id           String     @id @default(cuid())
+  itemId       String
+  item         AccessItem @relation(fields: [itemId], references: [id])
+  successUrl   String
+  cancelUrl    String
+  webhookUrl   String?
+  metadata     String?    // JSON blob — seller attaches any data
+  status       String     @default("open")  // open | complete | expired
+  passId       String?
+  buyerAddress String?
+  particleTxId String?
+  createdAt    DateTime   @default(now())
+  expiresAt    DateTime
 }

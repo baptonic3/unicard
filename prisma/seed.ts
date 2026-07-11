@@ -1,49 +1,57 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { db } from '../src/lib/db';
 
 async function main() {
-  // Seed a demo access item
-  const demoItem = await prisma.accessItem.upsert({
-    where: { slug: 'uxmaxx-demo-night' },
-    update: {},
-    create: {
-      slug: 'uxmaxx-demo-night',
-      title: 'UXmaxx Demo Night',
+  console.log('🌱 Seeding database...');
+
+  // Clear existing
+  await db.pass.deleteMany();
+  await db.accessItem.deleteMany();
+
+  // Seed access items
+  const items = [
+    {
+      slug: 'unicard-launch-party',
+      title: 'UniCard Launch Party',
       description:
-        'Exclusive access to the UXmaxx Hackathon Demo Night on July 17, 2026. Experience the future of chain-abstracted UX — live demos, networking, and prizes.',
-      imageUrl: null, // Will be replaced with generated image
-      priceUSDC: 0.5,
+        'Be part of the launch. Celebrate the first chain-abstracted checkout engine on Arbitrum. Open bar, networking, and live demos.',
+      imageUrl: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&auto=format&fit=crop',
+      priceUSDC: 2,
+      chainItemId: 0,
       active: true,
     },
-  });
-
-  console.log('✅ Seeded demo item:', demoItem);
-
-  // Optionally seed a second item for variety
-  const workshopItem = await prisma.accessItem.upsert({
-    where: { slug: 'particle-workshop' },
-    update: {},
-    create: {
-      slug: 'particle-workshop',
-      title: 'Particle UA Workshop',
+    {
+      slug: 'web3-builders-summit',
+      title: 'Web3 Builders Summit',
       description:
-        'Hands-on workshop: build cross-chain dApps with Particle Universal Accounts and EIP-7702. Learn from the Particle dev team.',
-      imageUrl: null,
-      priceUSDC: 0.25,
+        'Two-day conference bringing together the best builders in DeFi, account abstraction, and consumer crypto. Keynotes + workshops.',
+      imageUrl: 'https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=800&auto=format&fit=crop',
+      priceUSDC: 1,
+      chainItemId: null,
       active: true,
     },
-  });
+    {
+      slug: 'arbitrum-hackathon-uxmaxx',
+      title: 'UXmaxx Hackathon by Encode',
+      description:
+        'The flagship Web3 UX hackathon. Build consumer dApps with embedded wallets, chain abstraction, and social login. Join the revolution.',
+      imageUrl: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&auto=format&fit=crop',
+      priceUSDC: 0.3,
+      chainItemId: null,
+      active: true,
+    },
+  ];
 
-  console.log('✅ Seeded workshop item:', workshopItem);
+  for (const item of items) {
+    const created = await db.accessItem.create({ data: item });
+    console.log(`  ✅ Created: ${created.title} (${created.slug}) — $${created.priceUSDC} USDC`);
+  }
+
+  console.log('✅ Seeding complete!');
 }
 
 main()
-  .then(async () => {
-    await prisma.$disconnect();
-  })
-  .catch(async (e) => {
+  .catch((e) => {
     console.error(e);
-    await prisma.$disconnect();
     process.exit(1);
-  });
+  })
+  .finally(() => db.$disconnect());
