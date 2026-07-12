@@ -6,6 +6,7 @@ import { useUniversalAccount } from '@/hooks/UniversalAccountProvider';
 import { useMagic } from '@/hooks/MagicProvider';
 import Login from '@/components/Login';
 import BuyPassButton from '@/components/BuyPassButton';
+import PassCard from '@/components/PassCard';
 import { AccessItemData } from '@/components/AccessCard';
 
 interface CheckoutPageProps {
@@ -24,17 +25,18 @@ export default function CheckoutPage({ session, item }: CheckoutPageProps) {
   const { accountInfo, primaryAssets } = useUniversalAccount();
   const address = accountInfo?.ownerAddress || '';
   const primaryBalance = Number(primaryAssets?.totalAmountInUSD ?? 0);
-  const [passed, setPassed] = useState(false);
+  const [purchaseResult, setPurchaseResult] = useState<{ passId: number; arbTxHash: string; particleTxId: string } | null>(null);
 
-  const handleSuccess = (passId: number) => {
-    setPassed(true);
+  const handleSuccess = (passId: number, particleTxId?: string, arbTxHash?: string) => {
+    setPurchaseResult({ passId, arbTxHash: arbTxHash || '', particleTxId: particleTxId || '' });
+    // Delay redirect to show receipt
     setTimeout(() => {
       const url = new URL(session.successUrl);
       url.searchParams.set('session_id', session.id);
       url.searchParams.set('pass_id', String(passId));
       url.searchParams.set('status', 'success');
       window.location.href = url.toString();
-    }, 2500);
+    }, 8000); // 8s — enough to see the receipt
   };
 
   if (session.status !== 'open') {
@@ -114,11 +116,23 @@ export default function CheckoutPage({ session, item }: CheckoutPageProps) {
 
         {/* Right — Login / Pay */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '48px 40px' }}>
-          {passed ? (
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 72, marginBottom: 16, animation: 'pulse 1s ease' }}>🎉</div>
-              <h2 style={{ fontSize: 24, color: '#fff', fontWeight: 700, marginBottom: 8 }}>Payment Complete!</h2>
-              <p style={{ color: '#888' }}>Redirecting you back...</p>
+          {purchaseResult ? (
+            <div style={{ width: '100%', maxWidth: 400 }}>
+              <div style={{ textAlign: 'center', marginBottom: 16 }}>
+                <div style={{ fontSize: 40, marginBottom: 8 }}>🎉</div>
+                <h2 style={{ fontSize: 20, color: '#fff', fontWeight: 700, marginBottom: 4 }}>Payment Complete!</h2>
+                <p style={{ color: '#666', fontSize: 13 }}>Returning to seller in a few seconds…</p>
+              </div>
+              <PassCard
+                passId={purchaseResult.passId}
+                itemTitle={item.title}
+                itemDescription={item.description}
+                itemImageUrl={item.imageUrl ?? undefined}
+                priceUSDC={item.priceUSDC}
+                buyerAddress={address}
+                arbTxHash={purchaseResult.arbTxHash}
+                particleTxId={purchaseResult.particleTxId}
+              />
             </div>
           ) : !address ? (
             <div style={{ width: '100%', maxWidth: 400 }}>
@@ -136,7 +150,8 @@ export default function CheckoutPage({ session, item }: CheckoutPageProps) {
                 buyerAddress={address}
                 balance={primaryBalance}
                 depositAddress={accountInfo?.evmSmartAccount || ''}
-                onSuccess={(passId) => handleSuccess(passId)}
+                sessionId={session.id}
+                onSuccess={(passId, arbTxHash, particleTxId) => handleSuccess(passId, arbTxHash, particleTxId)}
               />
               <div style={{ marginTop: 16, textAlign: 'center' }}>
                 <a href={session.cancelUrl} style={{ color: '#555', fontSize: 13, textDecoration: 'none' }}>Cancel and go back</a>

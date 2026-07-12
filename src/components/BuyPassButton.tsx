@@ -18,6 +18,7 @@ interface BuyPassButtonProps {
   balance: number;         // USD total from primaryAssets
   depositAddress: string;  // UA smart account address
   redirectUrl?: string;    // ?redirect= param — fire after success
+  sessionId?: string;      // present when initiated via /checkout/[sessionId]
   onSuccess?: (passId: number, particleTxId: string, arbTxHash: string) => void;
 }
 
@@ -33,6 +34,7 @@ export default function BuyPassButton({
   balance,
   depositAddress,
   redirectUrl,
+  sessionId,
   onSuccess,
 }: BuyPassButtonProps) {
   const { universalAccount, signAndSend, refreshBalance } = useUniversalAccount();
@@ -171,6 +173,7 @@ export default function BuyPassButton({
           itemSlug: item.slug,
           priceUSDC: item.priceUSDC,
           chainItemId: item.chainItemId,
+          sessionId: sessionId ?? null,
         }),
       });
 
