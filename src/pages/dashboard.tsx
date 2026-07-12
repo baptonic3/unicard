@@ -1,0 +1,456 @@
+import Head from 'next/head';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { useState, useEffect, FormEvent } from 'react';
+import { useMagic } from '@/hooks/MagicProvider';
+import { getUserAddress, truncateAddress, saveUserInfo } from '@/utils/common';
+import { useUniversalAccount } from '@/hooks/UniversalAccountProvider';
+import Header from '@/components/Header';
+
+// ────────────────────────────────────────
+// Onboarding Screen — light-theme, matches wallet
+// ────────────────────────────────────────
+function OnboardingScreen({ token, setToken }: { token: string; setToken: (t: string) => void }) {
+  const { magic } = useMagic();
+  const [email, setEmail] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleLogin = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+    try {
+      setIsLoading(true);
+      setError('');
+      const didToken = await magic?.auth.loginWithEmailOTP({ email });
+      const metadata = await magic?.user.getInfo();
+      const publicAddress = metadata?.wallets?.ethereum?.publicAddress;
+      if (!didToken || !publicAddress) throw new Error('Login failed');
+      setToken(didToken);
+      saveUserInfo(didToken, 'EMAIL', publicAddress);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : '';
+      if (!msg.includes('canceled')) setError('Login failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '64px', alignItems: 'center', maxWidth: '860px', margin: '80px auto', padding: '0 16px' }}>
+      {/* LEFT: branding */}
+      <div>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', marginBottom: '32px', padding: '8px 16px', background: '#f1f5f9', borderRadius: '20px' }}>
+          <div style={{ width: '28px', height: '28px', background: 'linear-gradient(135deg,#7c3aed,#06b6d4)', borderRadius: '7px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="2"/></svg>
+          </div>
+          <span style={{ fontSize: '14px', fontWeight: 700, color: '#334155' }}>UniCard Wallet</span>
+        </div>
+        <h1 style={{ fontSize: '38px', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.15, marginBottom: '16px', color: '#0f172a' }}>Your Universal<br/>Crypto Wallet</h1>
+        <p style={{ color: '#64748b', fontSize: '15px', lineHeight: 1.7, marginBottom: '36px' }}> Pay for anything with any token — UniCard handles the rest.</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {[
+            { icon: '⚡', label: 'Magic Email Login', sub: 'No seed phrase, no extension' },
+            { icon: '🌐', label: 'Cross-chain', sub: 'Pay with any token on any chain' },
+            { icon: '🔒', label: 'EIP-7702 Smart Account', sub: 'Smart account, standard EOA' },
+          ].map((f) => (
+            <div key={f.label} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+              <div style={{ fontSize: '20px', lineHeight: 1, paddingTop: '2px', width: '28px', flexShrink: 0 }}>{f.icon}</div>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: '14px', color: '#111' }}>{f.label}</div>
+                <div style={{ fontSize: '13px', color: '#94a3b8', marginTop: '2px' }}>{f.sub}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* RIGHT: email OTP form */}
+      <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '24px', padding: '40px', boxShadow: '0 8px 30px rgba(0,0,0,0.06)' }}>
+        <h2 style={{ fontSize: '22px', fontWeight: 700, marginBottom: '8px', letterSpacing: '-0.02em', color: '#0f172a' }}>Get started</h2>
+        <p style={{ color: '#64748b', fontSize: '14px', marginBottom: '28px', lineHeight: 1.6 }}>Enter your email to create or access your wallet. No download required.</p>
+        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <input
+            type="email"
+            placeholder="your@email.com"
+            value={email}
+            onChange={(e) => { setEmail(e.target.value); setError(''); }}
+            disabled={isLoading}
+            style={{ width: '100%', padding: '14px 16px', fontSize: '15px', border: '1.5px solid #e2e8f0', borderRadius: '12px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', color: '#111', background: '#fafafa', transition: 'border-color 0.2s' }}
+          />
+          {error && <p style={{ color: '#ef4444', fontSize: '13px', margin: 0 }}>{error}</p>}
+          <button
+            type="submit"
+            disabled={isLoading || !email}
+            style={{ width: '100%', padding: '14px', background: isLoading || !email ? '#cbd5e1' : 'linear-gradient(135deg,#7c3aed,#06b6d4)', color: '#fff', border: 'none', borderRadius: '12px', fontSize: '15px', fontWeight: 700, cursor: isLoading || !email ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'background 0.2s' }}
+          >
+            {isLoading ? (
+              <><span style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.35)', borderTop: '2px solid #fff', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />Sending OTP...</>
+            ) : 'Continue with Email →'}
+          </button>
+        </form>
+        <div style={{ textAlign: 'center', marginTop: '24px', paddingTop: '20px', borderTop: '1px solid #f1f5f9' }}>
+          <p style={{ fontSize: '12px', color: '#94a3b8', margin: 0 }}>Powered by <strong style={{ color: '#7c3aed' }}>Magic</strong> × <strong style={{ color: '#06b6d4' }}>Particle Network</strong></p>
+          <p style={{ fontSize: '11px', color: '#cbd5e1', marginTop: '4px' }}>Your keys, your account. Non-custodial.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function Dashboard() {
+  const router = useRouter();
+  const { token, setToken } = useMagic();
+  const { accountInfo, primaryAssets, isDelegated } = useUniversalAccount();
+  const [address, setAddress] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+  const [passes, setPasses] = useState<any[]>([]);
+  const [isDark, setIsDark] = useState(false);
+
+  const t = isDark
+    ? { bg: '#0f0f14', surface: '#1a1a24', border: 'rgba(255,255,255,0.08)', text: '#f0f0f5', subtext: '#8892a4', muted: '#333344', accent: '#00e599', navBorder: 'rgba(255,255,255,0.07)', navBg: '#15151f', activeTab: '#fff', cardShadow: '0 2px 12px rgba(0,0,0,0.4)' }
+    : { bg: '#fcfcfc', surface: '#fff', border: '#e2e8f0', text: '#111', subtext: '#64748b', muted: '#f1f5f9', accent: '#00e599', navBorder: '#e2e8f0', navBg: '#fff', activeTab: '#111', cardShadow: '0 2px 4px rgba(0,0,0,0.02)' };
+
+  useEffect(() => {
+    setMounted(true);
+    const addr = getUserAddress();
+    setAddress(addr);
+    if (addr) {
+      fetch(`/api/passes?address=${addr}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.passes) setPasses(data.passes);
+        })
+        .catch(console.error);
+    }
+  }, [token]);
+
+  if (!mounted) return null;
+
+  const isLoggedIn = !!token && !!address;
+  const balance = Number(primaryAssets?.totalAmountInUSD ?? 0).toFixed(2);
+
+  // Conditionally render the pending event if ?pending=true
+  const isPendingEvent = router.query.pending === 'true';
+
+  return (
+    <>
+      <Head>
+        <title>Wallet | UniCard</title>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+      </Head>
+
+      <Header token={token} setToken={setToken} />
+
+      <div style={{ backgroundColor: t.bg, minHeight: '100vh', color: t.text, fontFamily: 'Inter, sans-serif', transition: 'background-color 0.25s, color 0.25s' }}>
+
+        {/* SECONDARY NAV STRIP */}
+        <div style={{ borderBottom: `1px solid ${t.navBorder}`, backgroundColor: t.navBg, transition: 'background-color 0.25s' }}>
+          <nav style={{ maxWidth: '1024px', margin: '0 auto', padding: '0 24px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <Link href="/dashboard" style={{ display: 'inline-block', padding: '14px 16px', color: t.activeTab, textDecoration: 'none', fontWeight: 600, fontSize: '14px', borderBottom: `2px solid ${t.activeTab}` }}>Wallet</Link>
+            <span style={{ display: 'inline-block', padding: '14px 16px', color: t.subtext, fontSize: '14px', cursor: 'default' }}>Transactions</span>
+            <span style={{ display: 'inline-block', padding: '14px 16px', color: t.subtext, fontSize: '14px', cursor: 'default' }}>Settings</span>
+            {/* Dark mode toggle */}
+            <div style={{ marginLeft: 'auto' }}>
+              <button
+                onClick={() => setIsDark(d => !d)}
+                title={isDark ? 'Switch to Light mode' : 'Switch to Dark mode'}
+                style={{
+                  width: 36, height: 36, borderRadius: '50%',
+                  background: isDark ? 'rgba(255,255,255,0.08)' : '#f1f5f9',
+                  border: `1px solid ${t.navBorder}`,
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  transition: 'background 0.2s',
+                }}
+              >
+                {isDark
+                  ? /* Sun */ <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f0f0f5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                  : /* Moon */ <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#334155" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                }
+              </button>
+            </div>
+          </nav>
+        </div>
+
+        {/* MAIN BODY */}
+        <main style={{ maxWidth: '1024px', margin: '0 auto', padding: '48px 24px' }}>
+          {!isLoggedIn ? (
+            <OnboardingScreen token={token} setToken={setToken} />
+          ) : (
+            <div className="fade-in">
+              {/* WELCOME */}
+              <div style={{ marginBottom: '32px' }}>
+                <h1 style={{ fontSize: '36px', fontWeight: 700, letterSpacing: '-0.02em', marginBottom: '8px', color: t.text }}>Welcome back</h1>
+                <p style={{ color: t.subtext, fontSize: '14px' }}>
+                  Your EOA <span style={{ fontFamily: 'monospace', fontWeight: 600, color: isDark ? '#a5b4fc' : '#334155' }}>{truncateAddress(address)}</span>
+                </p>
+              </div>
+
+              {isPendingEvent ? (
+                /* PENDING EVENT UI (IMAGE 2) */
+                <>
+                  {/* Top large card for pending event */}
+                  <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '24px', padding: '24px', display: 'flex', gap: '32px', marginBottom: '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
+                    {/* Event image mockup (using a gradient placeholder with text to look like the Onchain trading forum) */}
+                    <div style={{ width: '320px', height: '320px', borderRadius: '16px', background: 'linear-gradient(135deg, #475569 0%, #1e293b 100%)', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
+                      <div style={{ position: 'absolute', top: '24px', left: '24px', color: '#fff' }}>
+                        <div style={{ fontSize: '24px', fontWeight: 700, lineHeight: 1.1 }}>Onchain<br/>Trading Forum<br/>2026</div>
+                        <div style={{ fontSize: '12px', marginTop: '12px', opacity: 0.8 }}>13:30 - 18:30 JST, 12th July<br/>WebX Tokyo</div>
+                      </div>
+                      <div style={{ position: 'absolute', bottom: '24px', left: '24px', color: '#fff', fontSize: '18px', fontWeight: 800 }}>PopDEX</div>
+                    </div>
+                    
+                    {/* Event Details */}
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                        <span style={{ padding: '6px 12px', background: '#fef3c7', color: '#d97706', borderRadius: '20px', fontSize: '13px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#d97706' }}></span> Pending payment
+                        </span>
+                        <span style={{ fontSize: '13px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                          Reserved - 23:45 left
+                        </span>
+                      </div>
+                      
+                      <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '8px', letterSpacing: '-0.02em' }}>Onchain Trading Forum 2026 in Tokyo</h2>
+                      <p style={{ color: '#64748b', fontSize: '15px', marginBottom: '8px' }}>Thu, Jul 12 · Minato City, Japan</p>
+                      <a href="#" style={{ color: '#00e599', fontSize: '14px', fontWeight: 500, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px', marginBottom: 'auto' }}>
+                        View on lu.ma/ethglobal <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                      </a>
+                      
+                      {/* Price Details */}
+                      <div style={{ marginTop: '24px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '12px', fontSize: '14px', color: '#64748b' }}>
+                          <span>Price</span>
+                          <span style={{ color: '#111', fontWeight: 500 }}>$5.00</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '16px', borderBottom: '1px solid #e2e8f0', fontSize: '14px', color: '#64748b' }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>Service fee <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg></span>
+                          <span style={{ color: '#111', fontWeight: 500 }}>$0.20</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '16px', fontSize: '16px', fontWeight: 700 }}>
+                          <span>Total</span>
+                          <span>$5.20</span>
+                        </div>
+                      </div>
+                      
+                      {/* Action buttons */}
+                      <div style={{ display: 'flex', gap: '16px', marginTop: '32px' }}>
+                        <button style={{ flex: 1, padding: '16px', background: '#fff', border: '1px solid #e2e8f0', color: '#64748b', fontSize: '16px', fontWeight: 600, borderRadius: '12px', cursor: 'pointer' }}>Cancel</button>
+                        <button style={{ flex: 2, padding: '16px', background: '#00e599', color: '#fff', border: 'none', fontSize: '16px', fontWeight: 600, borderRadius: '12px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
+                          Pay $5.20 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Bottom two columns */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                    {/* Add funds box */}
+                    <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '24px', padding: '32px', display: 'flex', justifyContent: 'space-between', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                      <div>
+                        <div style={{ fontSize: '13px', fontWeight: 600, color: '#64748b', marginBottom: '8px' }}>Universal Balance</div>
+                        <div style={{ fontSize: '48px', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1, marginBottom: '8px' }}>$0.00</div>
+                        <div style={{ fontSize: '13px', color: '#64748b' }}>across all chains</div>
+                      </div>
+                      
+                      <div style={{ maxWidth: '200px', display: 'flex', flexDirection: 'column' }}>
+                        <div style={{ fontSize: '15px', fontWeight: 700, marginBottom: '8px' }}>Add funds to get started</div>
+                        <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '24px' }}>Buy with Apple Pay or card, or receive from any chain.</div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                          <button style={{ padding: '12px', background: '#00e599', color: '#fff', border: 'none', borderRadius: '12px', fontSize: '14px', fontWeight: 600, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Add funds
+                          </button>
+                          <button style={{ padding: '12px', background: '#fff', color: '#111', border: '1px solid #e2e8f0', borderRadius: '12px', fontSize: '14px', fontWeight: 600, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg> Receive
+                          </button>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', marginTop: '16px', fontSize: '12px', color: '#94a3b8' }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"></path></svg> Powered by Magic
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Delegation Card (same as empty wallet) */}
+                    <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '24px', padding: '32px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', borderBottom: '1px solid #f1f5f9', paddingBottom: '16px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00e599" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                          </div>
+                          <h3 style={{ fontSize: '18px', fontWeight: 700 }}>EIP-7702 Delegation</h3>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontSize: '13px', fontWeight: 600, color: '#00e599' }}>{isDelegated ? 'Active' : 'Unsigned'}</span>
+                          <div style={{ width: '40px', height: '24px', background: isDelegated ? '#00e599' : '#cbd5e1', borderRadius: '12px', position: 'relative' }}>
+                            <div style={{ width: '20px', height: '20px', background: '#fff', borderRadius: '50%', position: 'absolute', top: '2px', left: isDelegated ? '18px' : '2px', transition: 'left 0.2s' }}></div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        {[
+                          { label: 'Your EOA', value: truncateAddress(address) },
+                          { label: 'EVM UA', value: accountInfo ? truncateAddress(accountInfo.evmSmartAccount) : 'Loading...' },
+                          { label: 'Solana UA', value: accountInfo ? truncateAddress(accountInfo.solanaSmartAccount) : 'Loading...' },
+                          { label: 'Chain', value: 'Arbitrum • 42161', bold: true },
+                          { label: 'Mode', value: 'EIP-7702 Inline', bold: true }
+                        ].map(row => (
+                          <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: '14px', color: '#64748b' }}>{row.label}</span>
+                            <span style={{ fontSize: '14px', fontWeight: row.bold ? 600 : 500, color: '#111', fontFamily: row.bold ? 'inherit' : 'monospace' }}>{row.value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                /* DEFAULT EMPTY WALLET UI (IMAGE 1) */
+                <>
+                  <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: '24px', padding: '32px', display: 'flex', justifyContent: 'space-between', marginBottom: '24px', boxShadow: t.cardShadow }}>
+                    <div>
+                      <div style={{ fontSize: '13px', fontWeight: 600, color: t.subtext, marginBottom: '8px' }}>Universal Balance</div>
+                      <div style={{ fontSize: '56px', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1, marginBottom: '8px', color: t.text }}>${balance}</div>
+                      <div style={{ fontSize: '13px', color: t.subtext, marginBottom: '24px' }}>across all chains</div>
+                      <svg width="180" height="40" viewBox="0 0 180 40" fill="none">
+                        <path d="M0 35L20 32L35 38L50 25L65 28L80 20L95 24L110 15L125 18L140 10L155 12L175 5" stroke="#00e599" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                    <div style={{ display: 'flex', gap: '20px', alignItems: 'center', paddingRight: '16px' }}>
+                      {/* existing buttons code here... */}
+                      {[{label: 'Send', icon: <path d="M22 2L11 13M22 2L15 22L11 13L2 9L22 2Z" />, color: '#00e599', iconColor: '#fff'}, 
+                        {label: 'Receive', icon: <path d="M12 5v14M19 12l-7 7-7-7" />, color: '#f1f5f9', iconColor: '#334155'},
+                        {label: 'Add', icon: <path d="M12 5v14M5 12h14" />, color: '#f1f5f9', iconColor: '#334155'},
+                        {label: 'Convert', icon: <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5" />, color: '#f1f5f9', iconColor: '#334155'}
+                      ].map((btn) => (
+                        <div key={btn.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+                          <button style={{ width: '48px', height: '48px', borderRadius: '50%', background: btn.color, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'transform 0.1s' }}>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={btn.iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{btn.icon}</svg>
+                          </button>
+                          <span style={{ fontSize: '13px', fontWeight: 500, color: '#64748b' }}>{btn.label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
+                    <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: '24px', padding: '24px', boxShadow: t.cardShadow }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', borderBottom: `1px solid ${t.border}`, paddingBottom: '16px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00e599" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                          </div>
+                          <h3 style={{ fontSize: '16px', fontWeight: 700, color: t.text }}>EIP-7702 Delegation</h3>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontSize: '13px', fontWeight: 600, color: '#00e599' }}>{isDelegated ? 'Active' : 'Unsigned'}</span>
+                          <div style={{ width: '40px', height: '24px', background: isDelegated ? '#00e599' : '#cbd5e1', borderRadius: '12px', position: 'relative' }}>
+                            <div style={{ width: '20px', height: '20px', background: '#fff', borderRadius: '50%', position: 'absolute', top: '2px', left: isDelegated ? '18px' : '2px' }}></div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        {[
+                          { label: 'Your EOA', value: truncateAddress(address) },
+                          { label: 'EVM UA', value: accountInfo ? truncateAddress(accountInfo.evmSmartAccount) : 'Loading...' },
+                          { label: 'Solana UA', value: accountInfo ? truncateAddress(accountInfo.solanaSmartAccount) : 'Loading...' },
+                          { label: 'Chain', value: 'Arbitrum • 42161', bold: true },
+                          { label: 'Mode', value: 'EIP-7702 Inline', bold: true }
+                        ].map(row => (
+                          <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: '14px', color: t.subtext }}>{row.label}</span>
+                            <span style={{ fontSize: '14px', fontWeight: row.bold ? 600 : 500, color: t.text, fontFamily: row.bold ? 'inherit' : 'monospace' }}>{row.value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: '24px', padding: '24px', display: 'flex', flexDirection: 'column', boxShadow: t.cardShadow }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                        <h3 style={{ fontSize: '16px', fontWeight: 700, color: t.text }}>Chains & assets</h3>
+                        <span style={{ fontSize: '12px', color: t.subtext }}>3 networks</span>
+                      </div>
+                      
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', flex: 1 }}>
+                        {(!primaryAssets?.assets || primaryAssets.assets.length === 0) ? (
+                          <div style={{ fontSize: '14px', color: t.subtext, marginTop: '16px' }}>Loading assets or wallet empty...</div>
+                        ) : (
+                          primaryAssets.assets.map((asset: any) => {
+                            const value = (Number(asset.amount) * (asset.price || 0)).toFixed(2);
+                            if (Number(value) === 0) return null;
+                            const chainName = asset.chainId === 42161 ? 'Arbitrum' : asset.chainId === 8453 ? 'Base' : asset.chainId === 10132 ? 'Solana' : `Chain ${asset.chainId}`;
+                            return (
+                              <div key={asset.chainId + asset.symbol} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                  <div style={{ width: '24px', height: '24px', background: '#28a0f0', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ color: '#fff', fontSize: '10px', fontWeight: 'bold' }}>{asset.symbol ? asset.symbol[0] : 'T'}</span></div>
+                                  <span style={{ fontSize: '14px', fontWeight: 600, color: '#111' }}>{chainName} <span style={{ color: '#94a3b8', fontWeight: 400 }}>{asset.symbol || 'Token'}</span></span>
+                                </div>
+                                <span style={{ fontSize: '14px', fontWeight: 600 }}>${value}</span>
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+
+                      <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: `1px solid ${t.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '13px', color: t.subtext }}>Total balance</span>
+                        <span style={{ fontSize: '16px', fontWeight: 700, color: t.text }}>${balance}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ background: t.surface, border: `1px solid ${isDark ? t.accent + '33' : '#bbf7d0'}`, borderRadius: '20px', padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                      <div style={{ width: '48px', height: '48px', borderRadius: '50%', border: '1px dashed #00e599', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00e599" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                      </div>
+                      <div>
+                        <h4 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 4px 0', color: t.text }}>Add funds from any chain</h4>
+                        <p style={{ fontSize: '13px', color: t.subtext, margin: 0 }}>Top up in seconds — no bridging.</p>
+                      </div>
+                    </div>
+                    <button style={{ padding: '12px 24px', background: '#00e599', color: '#fff', fontWeight: 600, fontSize: '14px', border: 'none', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      Add funds <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </button>
+                  </div>
+
+                  <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: '24px', padding: '24px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                      <h3 style={{ fontSize: '18px', fontWeight: 700, color: t.text }}>Recent activity</h3>
+                      <span style={{ fontSize: '13px', fontWeight: 600, color: t.accent, cursor: 'pointer' }}>View all →</span>
+                    </div>
+
+                    {passes.length === 0 ? (
+                      <div style={{ fontSize: '14px', color: t.subtext, marginTop: '16px' }}>No recent activity. Mint a pass to get started!</div>
+                    ) : (
+                      passes.map(pass => (
+                        <div key={pass.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '16px', borderBottom: `1px solid ${t.border}`, marginBottom: '16px', marginTop: '16px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: isDark ? 'rgba(255,255,255,0.06)' : '#f8fafc', border: `1px solid ${t.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+                            </div>
+                            <div>
+                              <div style={{ fontSize: '15px', fontWeight: 600, marginBottom: '2px', color: t.text }}>Pass Issued</div>
+                              <div style={{ fontSize: '13px', color: t.subtext }}>{pass.item?.title || 'Unknown Item'}</div>
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                            <span style={{ fontSize: '11px', fontWeight: 600, background: '#f0fdf4', color: '#059669', padding: '4px 10px', borderRadius: '12px' }}>• Confirmed</span>
+                            <span style={{ fontSize: '13px', color: '#94a3b8', width: '70px', textAlign: 'right' }}>TX: {truncateAddress(pass.arbTxHash || pass.particleTxId || '')}</span>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </main>
+      </div>
+    </>
+  );
+}

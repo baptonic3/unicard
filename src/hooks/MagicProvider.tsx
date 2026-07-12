@@ -1,21 +1,31 @@
 import { EVMExtension } from '@magic-ext/evm';
 import { Magic as MagicBase } from 'magic-sdk';
-import { ReactNode, createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { ReactNode, createContext, useContext, useEffect, useMemo, useState, Dispatch, SetStateAction } from 'react';
+import { getToken } from '@/utils/common';
 
 export type Magic = MagicBase<[EVMExtension]>;
 
 type MagicContextType = {
   magic: Magic | null;
+  token: string;
+  setToken: Dispatch<SetStateAction<string>>;
 };
 
 const MagicContext = createContext<MagicContextType>({
   magic: null,
+  token: '',
+  setToken: () => {},
 });
 
 export const useMagic = () => useContext(MagicContext);
 
 const MagicProvider = ({ children }: { children: ReactNode }) => {
   const [magic, setMagic] = useState<Magic | null>(null);
+  const [token, setToken] = useState('');
+
+  useEffect(() => {
+    setToken(getToken());
+  }, []);
 
   useEffect(() => {
     if (process.env.NEXT_PUBLIC_MAGIC_API_KEY) {
@@ -36,7 +46,7 @@ const MagicProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  const value = useMemo(() => ({ magic }), [magic]);
+  const value = useMemo(() => ({ magic, token, setToken }), [magic, token]);
 
   return <MagicContext.Provider value={value}>{children}</MagicContext.Provider>;
 };

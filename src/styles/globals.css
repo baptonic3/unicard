@@ -162,6 +162,11 @@ body {
   animation: fadeIn 0.5s ease-out;
 }
 
+/* Spinner */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 /* Staggered animation for lists */
 .stagger-in > * {
   opacity: 0;
