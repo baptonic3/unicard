@@ -1,12 +1,15 @@
 import { GetServerSideProps } from 'next';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { db } from '@/lib/db';
 import { useUniversalAccount } from '@/hooks/UniversalAccountProvider';
 import { useMagic } from '@/hooks/MagicProvider';
-import Login from '@/components/Login';
+import { getUserAddress, truncateAddress } from '@/utils/common';
 import BuyPassButton from '@/components/BuyPassButton';
 import PassCard from '@/components/PassCard';
+import Header from '@/components/Header';
 import { AccessItemData } from '@/components/AccessCard';
 
 interface CheckoutPageProps {
@@ -16,33 +19,79 @@ interface CheckoutPageProps {
     cancelUrl: string;
     status: string;
     expiresAt: string;
+    sellerName?: string;
   };
   item: AccessItemData;
 }
 
+// ── Countdown timer hook ──────────────────────────────
+function useCountdown(expiresAt: string) {
+  const calc = () => Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000));
+  const [seconds, setSeconds] = useState(calc);
+  useEffect(() => {
+    const id = setInterval(() => setSeconds(calc()), 1000);
+    return () => clearInterval(id);
+  }, [expiresAt]);
+  const mm = String(Math.floor(seconds / 60)).padStart(2, '0');
+  const ss = String(seconds % 60).padStart(2, '0');
+  return { display: `${mm}:${ss}`, expired: seconds === 0 };
+}
+
+// ── Dark mode theme (same as dashboard) ──────────────
+const LIGHT = {
+  bg: '#fcfcfc', surface: '#fff', border: '#e2e8f0', text: '#111',
+  subtext: '#64748b', muted: '#f1f5f9', accent: '#00e599',
+  navBorder: '#e2e8f0', navBg: '#fff', activeTab: '#111',
+  cardShadow: '0 2px 4px rgba(0,0,0,0.02)',
+};
+const DARK = {
+  bg: '#0f0f14', surface: '#1a1a24', border: 'rgba(255,255,255,0.08)', text: '#f0f0f5',
+  subtext: '#8892a4', muted: '#333344', accent: '#00e599',
+  navBorder: 'rgba(255,255,255,0.07)', navBg: '#15151f', activeTab: '#fff',
+  cardShadow: '0 2px 12px rgba(0,0,0,0.4)',
+};
+
 export default function CheckoutPage({ session, item }: CheckoutPageProps) {
-  const { token, setToken } = useMagic();         // ← global context, syncs with UAProvider
-  const { accountInfo, primaryAssets } = useUniversalAccount();
+  const router = useRouter();
+  const { token, setToken } = useMagic();
+  const { accountInfo, primaryAssets, isDelegated } = useUniversalAccount();
   const address = accountInfo?.ownerAddress || '';
-  const primaryBalance = Number(primaryAssets?.totalAmountInUSD ?? 0);
-  const [purchaseResult, setPurchaseResult] = useState<{ passId: number; arbTxHash: string; particleTxId: string } | null>(null);
+  const evmSmartAccount = accountInfo?.evmSmartAccount || '';
+  const solanaSmartAccount = accountInfo?.solanaSmartAccount || '';
+  const primaryBalance = Number(primaryAssets?.totalAmountInUSD ?? 0).toFixed(2);
+  const [mounted, setMounted] = useState(false);
+  const [isDark, setIsDark] = useState(false);
+  const [purchaseResult, setPurchaseResult] = useState<{
+    passId: number; arbTxHash: string; particleTxId: string;
+  } | null>(null);
+
+  const { display: timerDisplay, expired: sessionExpired } = useCountdown(session.expiresAt);
+  const t = isDark ? DARK : LIGHT;
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Redirect to login if unauthenticated
+  useEffect(() => {
+    if (!mounted) return;
+    const addr = getUserAddress();
+    if (!token && !addr) {
+      router.replace(`/login?next=/checkout/${session.id}`);
+    }
+  }, [mounted, token]);
 
   const handleSuccess = (passId: number, particleTxId?: string, arbTxHash?: string) => {
     setPurchaseResult({ passId, arbTxHash: arbTxHash || '', particleTxId: particleTxId || '' });
-    // Delay redirect to show receipt
-    setTimeout(() => {
-      const url = new URL(session.successUrl);
-      url.searchParams.set('session_id', session.id);
-      url.searchParams.set('pass_id', String(passId));
-      url.searchParams.set('status', 'success');
-      window.location.href = url.toString();
-    }, 8000); // 8s — enough to see the receipt
   };
 
+  if (!mounted) return null;
+
+  // ── Session not open (complete / expired) ──
   if (session.status !== 'open') {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0a0f', color: '#fff', fontFamily: 'Inter, sans-serif' }}>
-        <div style={{ textAlign: 'center' }}>
+        <div style={{ textAlign: 'center', padding: 32 }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>⚠️</div>
           <h1 style={{ fontSize: 24, marginBottom: 8 }}>Session {session.status}</h1>
           <p style={{ color: '#888', marginBottom: 24 }}>This checkout session is no longer active.</p>
@@ -52,113 +101,260 @@ export default function CheckoutPage({ session, item }: CheckoutPageProps) {
     );
   }
 
+  // ── After purchase: full-page receipt ──
+  if (purchaseResult) {
+    return (
+      <div style={{ minHeight: '100vh', background: t.bg, fontFamily: 'Inter, sans-serif', transition: 'background 0.25s' }}>
+        <Header token={token} setToken={setToken} />
+        <div style={{ maxWidth: 520, margin: '0 auto', padding: '48px 24px' }}>
+          <div style={{ textAlign: 'center', marginBottom: 32 }}>
+            <div style={{ fontSize: 48, marginBottom: 12 }}>🎉</div>
+            <h1 style={{ fontSize: 26, fontWeight: 800, color: t.text, letterSpacing: '-0.02em', marginBottom: 6 }}>
+              Payment Complete!
+            </h1>
+            <p style={{ color: t.subtext, fontSize: 14 }}>Your access pass has been issued on Arbitrum.</p>
+          </div>
+
+          <PassCard
+            passId={purchaseResult.passId}
+            itemTitle={item.title}
+            itemDescription={item.description}
+            itemImageUrl={item.imageUrl ?? undefined}
+            priceUSDC={item.priceUSDC}
+            buyerAddress={address}
+            arbTxHash={purchaseResult.arbTxHash}
+            particleTxId={purchaseResult.particleTxId}
+          />
+
+          {/* Return CTA */}
+          <div style={{ marginTop: 24, textAlign: 'center' }}>
+            <a
+              href={(() => {
+                try {
+                  const url = new URL(session.successUrl);
+                  url.searchParams.set('session_id', session.id);
+                  url.searchParams.set('pass_id', String(purchaseResult.passId));
+                  url.searchParams.set('status', 'success');
+                  return url.toString();
+                } catch { return session.successUrl; }
+              })()}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                padding: '14px 28px', borderRadius: 12, fontWeight: 700, fontSize: 15,
+                background: '#00e599', color: '#fff', textDecoration: 'none',
+                transition: 'opacity 0.2s',
+              }}
+            >
+              {item.title ? `Return to checkout →` : 'Return to seller →'}
+            </a>
+            <div style={{ marginTop: 12 }}>
+              <Link href="/dashboard" style={{ fontSize: 13, color: t.subtext, textDecoration: 'none' }}>
+                View in my wallet →
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Main checkout page ──
   return (
     <>
       <Head>
         <title>Checkout — {item.title} | UniCard</title>
         <meta name="description" content={`Purchase access to ${item.title} with any crypto, any chain.`} />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
       </Head>
 
-      <div style={{ minHeight: '100vh', display: 'flex', fontFamily: 'Inter, sans-serif', background: '#0a0a0f' }}>
-        {/* Left — Item Preview */}
-        <div style={{
-          flex: 1,
-          background: 'linear-gradient(135deg, #1a0a2e 0%, #0a0a1f 100%)',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          padding: '48px',
-          borderRight: '1px solid rgba(124,58,237,0.2)',
-          position: 'relative',
-          overflow: 'hidden',
-        }}>
-          {/* Glow */}
-          <div style={{ position: 'absolute', top: '-100px', left: '-100px', width: 400, height: 400, borderRadius: '50%', background: 'rgba(124,58,237,0.15)', filter: 'blur(80px)', pointerEvents: 'none' }} />
+      <div style={{ backgroundColor: t.bg, minHeight: '100vh', color: t.text, fontFamily: 'Inter, sans-serif', transition: 'background-color 0.25s, color 0.25s' }}>
 
-          <div style={{ position: 'relative', zIndex: 1 }}>
-            {/* UniCard badge */}
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(124,58,237,0.3)', borderRadius: 20, padding: '6px 14px', marginBottom: 32 }}>
-              <span style={{ fontSize: 14, background: 'linear-gradient(135deg,#7c3aed,#06b6d4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontWeight: 700 }}>UniCard</span>
-              <span style={{ color: '#888', fontSize: 12 }}>Secure Checkout</span>
+        {/* ── Header ── */}
+        <Header token={token} setToken={setToken} />
+
+        {/* <div style={{ borderBottom: `1px solid ${t.navBorder}`, backgroundColor: t.navBg, transition: 'background 0.25s' }}>
+          <nav style={{ maxWidth: '1024px', margin: '0 auto', padding: '0 24px', display: 'flex', gap: 8, alignItems: 'center' }}>
+            <Link href="/dashboard" style={{ display: 'inline-block', padding: '14px 16px', color: t.subtext, textDecoration: 'none', fontWeight: 500, fontSize: 14 }}>Wallet</Link>
+            <span style={{ display: 'inline-block', padding: '14px 16px', color: t.subtext, fontSize: 14, cursor: 'default' }}>Transactions</span>
+            <span style={{ display: 'inline-block', padding: '14px 16px', color: t.subtext, fontSize: 14, cursor: 'default' }}>Settings</span>
+
+            <div style={{ marginLeft: 'auto' }}>
+              <button
+                onClick={() => setIsDark(d => !d)}
+                title={isDark ? 'Light mode' : 'Dark mode'}
+                style={{
+                  width: 36, height: 36, borderRadius: '50%',
+                  background: isDark ? 'rgba(255,255,255,0.08)' : '#f1f5f9',
+                  border: `1px solid ${t.navBorder}`,
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  transition: 'background 0.2s',
+                }}
+              >
+                {isDark
+                  ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f0f0f5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                  : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#334155" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                }
+              </button>
+            </div>
+          </nav>
+        </div> */}
+
+        {/* ── Main content ── */}
+        <main style={{ maxWidth: '1024px', margin: '0 auto', padding: '40px 24px' }}>
+
+          {/* Welcome */}
+          <div style={{ marginBottom: 30 }}>
+            <h1 style={{ fontSize: 28, fontWeight: 700, letterSpacing: '-0.02em', marginBottom: 4, color: t.text }}>Welcome back</h1>
+            <p style={{ color: t.subtext, fontSize: 14 }}>
+              Your EOA&nbsp;
+              <span style={{ fontFamily: 'monospace', fontWeight: 600, color: isDark ? '#a5b4fc' : '#334155' }}>
+                {address ? truncateAddress(address) : '—'}
+              </span>
+            </p>
+          </div>
+
+          {/* ── STICKY Pending Payment Block ── */}
+          <div style={{
+            position: 'sticky', top: 24, zIndex: 100,
+            background: t.surface, border: `1px solid ${t.border}`,
+            borderRadius: 20, padding: '24px',
+            boxShadow: isDark ? '0 8px 40px rgba(0,0,0,0.5)' : '0 4px 24px rgba(0,0,0,0.08)',
+            marginBottom: 32,
+            transition: 'background 0.25s, border-color 0.25s',
+          }}>
+            {/* Status row */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: 20, padding: '5px 12px' }}>
+                <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#f97316', flexShrink: 0 }} />
+                <span style={{ fontSize: 12, fontWeight: 600, color: '#c2410c' }}>Pending payment</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: sessionExpired ? '#ef4444' : t.subtext, fontSize: 13 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                {sessionExpired
+                  ? 'Session expired'
+                  : `Reserved · ${timerDisplay} left`
+                }
+              </div>
             </div>
 
-            {/* Event image */}
-            {item.imageUrl && (
-              <img src={item.imageUrl} alt={item.title} style={{ width: '100%', maxWidth: 400, borderRadius: 16, marginBottom: 28, objectFit: 'cover', height: 220 }} />
-            )}
+            {/* Event row */}
+            <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
+              {/* Event image */}
+              {item.imageUrl && (
+                <img
+                  src={item.imageUrl}
+                  alt={item.title}
+                  style={{ width: 180, height: 180, borderRadius: 12, objectFit: 'cover', flexShrink: 0 }}
+                />
+              )}
 
-            <h1 style={{ fontSize: 28, fontWeight: 700, color: '#fff', marginBottom: 12, lineHeight: 1.3 }}>{item.title}</h1>
-            <p style={{ color: '#888', fontSize: 15, lineHeight: 1.6, marginBottom: 32, maxWidth: 380 }}>{item.description}</p>
-
-            {/* Price */}
-            <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: 400 }}>
-              <span style={{ color: '#888', fontSize: 14 }}>Total</span>
-              <span style={{ fontSize: 24, fontWeight: 700, color: '#fff' }}>${item.priceUSDC.toFixed(2)} <span style={{ fontSize: 14, color: '#888' }}>USDC</span></span>
+              {/* Event details */}
+              <div style={{ flex: 1 }}>
+                <h2 style={{ fontSize: 20, fontWeight: 700, color: t.text, marginBottom: 4, lineHeight: 1.3 }}>{item.title}</h2>
+                {item.description && (
+                  <p style={{ fontSize: 13, color: t.subtext, marginBottom: 12, lineHeight: 1.5 }}>{item.description}</p>
+                )}
+                {/* Price row — no fee */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, borderTop: `1px solid ${t.border}`, paddingTop: 12, marginTop: 8 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
+                    <span style={{ color: t.subtext }}>Price</span>
+                    <span style={{ color: t.text, fontWeight: 500 }}>${item.priceUSDC.toFixed(2)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 15, fontWeight: 700, marginTop: 5 }}>
+                    <span style={{ color: t.text }}>Total</span>
+                    <span style={{ color: t.text }}>${item.priceUSDC.toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* Trust signals */}
-            <div style={{ marginTop: 24, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-              {['🔒 Chain abstracted', '⚡ Any wallet', '🌐 Any chain'].map(t => (
-                <span key={t} style={{ fontSize: 12, color: '#666', background: 'rgba(255,255,255,0.04)', padding: '4px 10px', borderRadius: 20, border: '1px solid rgba(255,255,255,0.06)' }}>{t}</span>
-              ))}
+            {/* Action buttons */}
+            <div style={{ display: 'flex', gap: 12, marginTop: 20 }}>
+              <a
+                href={session.cancelUrl}
+                style={{
+                  flex: 1, padding: '13px 0', textAlign: 'center', borderRadius: 12,
+                  border: `1px solid ${t.border}`, color: t.subtext, fontSize: 15, fontWeight: 600,
+                  textDecoration: 'none', background: 'transparent', cursor: 'pointer',
+                  transition: 'background 0.15s',
+                }}
+              >
+                Cancel
+              </a>
+
+              {sessionExpired ? (
+                <div style={{
+                  flex: 1, padding: '13px 0', textAlign: 'center', borderRadius: 12,
+                  background: '#f1f5f9', color: '#94a3b8', fontSize: 15, fontWeight: 600,
+                }}>
+                  Session expired
+                </div>
+              ) : (
+                <div style={{ flex: 1 }}>
+                  <BuyPassButton
+                    item={item}
+                    buyerAddress={address}
+                    balance={Number(primaryAssets?.totalAmountInUSD ?? 0)}
+                    depositAddress={evmSmartAccount}
+                    sessionId={session.id}
+                    onSuccess={(passId, particleTxId, arbTxHash) => handleSuccess(passId, particleTxId, arbTxHash)}
+                  />
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Powered by footer */}
-          <div style={{ position: 'absolute', bottom: 24, left: 48, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ color: '#444', fontSize: 12 }}>Powered by</span>
-            <span style={{ fontSize: 12, fontWeight: 700, background: 'linear-gradient(135deg,#7c3aed,#06b6d4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>UniCard</span>
-            <span style={{ color: '#333', fontSize: 12 }}>× Particle Network × Magic</span>
-          </div>
-        </div>
+          {/* ── Bottom 2-col Grid ── */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
 
-        {/* Right — Login / Pay */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '48px 40px' }}>
-          {purchaseResult ? (
-            <div style={{ width: '100%', maxWidth: 400 }}>
-              <div style={{ textAlign: 'center', marginBottom: 16 }}>
-                <div style={{ fontSize: 40, marginBottom: 8 }}>🎉</div>
-                <h2 style={{ fontSize: 20, color: '#fff', fontWeight: 700, marginBottom: 4 }}>Payment Complete!</h2>
-                <p style={{ color: '#666', fontSize: 13 }}>Returning to seller in a few seconds…</p>
+            {/* Universal Balance */}
+            <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: 20, padding: 24, boxShadow: t.cardShadow }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: t.subtext, marginBottom: 8 }}>Universal Balance</div>
+              <div style={{ fontSize: 48, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1, marginBottom: 6, color: t.text }}>
+                ${primaryBalance}
               </div>
-              <PassCard
-                passId={purchaseResult.passId}
-                itemTitle={item.title}
-                itemDescription={item.description}
-                itemImageUrl={item.imageUrl ?? undefined}
-                priceUSDC={item.priceUSDC}
-                buyerAddress={address}
-                arbTxHash={purchaseResult.arbTxHash}
-                particleTxId={purchaseResult.particleTxId}
-              />
+              <div style={{ fontSize: 13, color: t.subtext }}>across all chains</div>
+              <svg style={{ marginTop: 16, display: 'block' }} width="100%" height="32" viewBox="0 0 200 32" fill="none" preserveAspectRatio="none">
+                <path d="M0 28L25 24L45 30L65 18L85 22L105 14L125 18L145 10L165 12L185 5L200 6" stroke="#00e599" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
             </div>
-          ) : !address ? (
-            <div style={{ width: '100%', maxWidth: 400 }}>
-              <h2 style={{ fontSize: 20, color: '#fff', fontWeight: 600, marginBottom: 8, textAlign: 'center' }}>Sign in to complete purchase</h2>
-              <p style={{ color: '#666', fontSize: 14, textAlign: 'center', marginBottom: 32 }}>Use your email — no wallet extension needed</p>
-              <Login token={token} setToken={setToken} />
-            </div>
-          ) : (
-            <div style={{ width: '100%', maxWidth: 400 }}>
-              <div style={{ marginBottom: 24, padding: '12px 16px', background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.2)', borderRadius: 10, fontSize: 13, color: '#888' }}>
-                Logged in as <span style={{ color: '#a78bfa', fontWeight: 600 }}>{address.slice(0, 6)}...{address.slice(-4)}</span>
+
+            {/* EIP-7702 Delegation card */}
+            <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: 20, padding: 24, boxShadow: t.cardShadow }}>
+              {/* Card header */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, borderBottom: `1px solid ${t.border}`, paddingBottom: 14 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00e599" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                  </div>
+                  <h3 style={{ fontSize: 15, fontWeight: 700, color: t.text }}>EIP-7702 Delegation</h3>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: '#00e599' }}>{isDelegated ? 'Active' : 'Unsigned'}</span>
+                  <div style={{ width: 36, height: 20, background: isDelegated ? '#00e599' : '#cbd5e1', borderRadius: 10, position: 'relative' }}>
+                    <div style={{ width: 16, height: 16, background: '#fff', borderRadius: '50%', position: 'absolute', top: 2, left: isDelegated ? 18 : 2, transition: 'left 0.2s' }} />
+                  </div>
+                </div>
               </div>
-              <BuyPassButton
-                item={item}
-                buyerAddress={address}
-                balance={primaryBalance}
-                depositAddress={accountInfo?.evmSmartAccount || ''}
-                sessionId={session.id}
-                onSuccess={(passId, arbTxHash, particleTxId) => handleSuccess(passId, arbTxHash, particleTxId)}
-              />
-              <div style={{ marginTop: 16, textAlign: 'center' }}>
-                <a href={session.cancelUrl} style={{ color: '#555', fontSize: 13, textDecoration: 'none' }}>Cancel and go back</a>
+
+              {/* Rows */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {[
+                  { label: 'Your EOA', value: address ? truncateAddress(address) : '—' },
+                  { label: 'EVM UA', value: evmSmartAccount ? truncateAddress(evmSmartAccount) : 'Loading…' },
+                  { label: 'Solana UA', value: solanaSmartAccount ? truncateAddress(solanaSmartAccount) : 'Loading…' },
+                  { label: 'Chain', value: 'Arbitrum · 42161', bold: true },
+                  { label: 'Mode', value: 'EIP-7702 Inline', bold: true },
+                ].map(row => (
+                  <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: 13, color: t.subtext }}>{row.label}</span>
+                    <span style={{ fontSize: 13, fontWeight: row.bold ? 600 : 500, color: t.text, fontFamily: row.bold ? 'inherit' : 'monospace' }}>{row.value}</span>
+                  </div>
+                ))}
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        </main>
       </div>
     </>
   );

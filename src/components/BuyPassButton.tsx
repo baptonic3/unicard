@@ -300,7 +300,7 @@ export default function BuyPassButton({
           onClick={handleBuy}
           disabled={txStep === 'error'}
         >
-          {txStep === 'error' ? '❌ Failed — try again' : `✨ Buy Pass — $${item.priceUSDC.toFixed(2)} USDC`}
+          {txStep === 'error' ? '❌ Failed — try again' : ` Pay $${item.priceUSDC.toFixed(2)}`}
         </button>
       ) : txStep === 'done' ? (
         <button id="buy-pass-btn" className="btn-primary buy-btn buy-btn-done" disabled>
@@ -315,7 +315,7 @@ export default function BuyPassButton({
         </button>
       )}
 
-      <p className="gas-note">Gas included. Cross-chain routing automatic.</p>  {/*not gasless user pays gas for cross chain txn via partical universal sdk - todo: need to update this note (take care of this by including gas + pass price in the priceUSDC)*/}
+      {/* <p className="gas-note">Gas included. Cross-chain routing automatic.</p>  not gasless user pays gas for cross chain txn via partical universal sdk - todo: need to update this note (take care of this by including gas + pass price in the priceUSDC) */}
 
       <style jsx>{`
         .buy-section { display: flex; flex-direction: column; gap: 0.75rem; }
