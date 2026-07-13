@@ -72,11 +72,11 @@ const Header = ({ token, setToken }: HeaderProps) => {
                 <span className="address-truncate">{truncateAddress(address)}</span>
                 <span className="copy-icon">
                   {copied ? (
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="20 6 9 17 4 12" />
                     </svg>
                   ) : (
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
                       <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                     </svg>
@@ -84,7 +84,7 @@ const Header = ({ token, setToken }: HeaderProps) => {
                 </span>
               </div>
               <button
-                className="btn-secondary header-logout-btn"
+                className="header-logout-btn"
                 onClick={handleLogout}
                 disabled={isLoggingOut}
               >
@@ -100,10 +100,11 @@ const Header = ({ token, setToken }: HeaderProps) => {
           position: sticky;
           top: 0;
           z-index: 100;
-          background: rgba(10, 10, 15, 0.8);
+          background: rgba(255, 255, 255, 1);
           backdrop-filter: blur(20px);
           -webkit-backdrop-filter: blur(20px);
-          border-bottom: 1px solid var(--glass-border);
+          border-bottom: 1px solid #e2e8f0;
+          color: #0f172a;
         }
         .header-inner {
           display: flex;
@@ -140,22 +141,26 @@ const Header = ({ token, setToken }: HeaderProps) => {
           align-items: center;
           gap: 0.5rem;
           padding: 0.5rem 0.875rem;
-          background: var(--glass-bg);
-          border: 1px solid var(--glass-border);
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
           border-radius: 20px;
           cursor: pointer;
           transition: all 0.2s ease;
+          color: #334155;
         }
         .header-address-chip:hover {
-          border-color: var(--color-primary-light);
-          background: var(--bg-card-hover);
+          border-color: #cbd5e1;
+          background: #f1f5f9;
+        }
+        .header-address-chip .address-truncate {
+          color: #334155;
         }
         .header-dot {
           width: 8px;
           height: 8px;
           border-radius: 50%;
-          background: var(--color-success);
-          box-shadow: 0 0 6px var(--color-success);
+          background: #10b981;
+          box-shadow: 0 0 6px rgba(16, 185, 129, 0.4);
         }
         .copy-icon {
           display: flex;
@@ -165,7 +170,22 @@ const Header = ({ token, setToken }: HeaderProps) => {
         .header-logout-btn {
           padding: 0.5rem 1rem;
           font-size: 0.8125rem;
+          font-weight: 600;
           border-radius: 20px;
+          background: #fff;
+          color: #64748b;
+          border: 1px solid #e2e8f0;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        .header-logout-btn:hover {
+          background: #f8fafc;
+          color: #0f172a;
+          border-color: #cbd5e1;
+        }
+        .header-logout-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
         }
       `}</style>
     </header>
