@@ -1,338 +1,530 @@
 import Head from 'next/head';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 export default function Home() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+
   return (
     <>
       <Head>
-        <title>UniCard — One Account. One Pass. Any Chain.</title>
+        <title>UniCard | Universal Crypto Checkout</title>
         <meta
           name="description"
-          content="The chain-abstracted checkout engine. Buy access passes from any chain using any asset. Powered by Particle Universal Accounts and settled on Arbitrum."
+          content="The chain-abstracted checkout engine. Businesses accept any token on any chain and settle in USDC on Arbitrum."
         />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
       </Head>
 
       <div className="landing-root">
-        {/* Hero */}
-        <section className="hero-section">
-          <div className="hero-content">
-            <h1 className="hero-title fade-in">
-              One Account.<br />
-              <span className="gradient-text">One Pass.</span><br />
-              Any Chain.
+        {/* Soft Light Background Elements */}
+        <div className="bg-pattern" />
+        <div className="bg-orb orb-1" />
+        <div className="bg-orb orb-2" />
+
+        {/* Header / Navbar */}
+        <header className="navbar">
+          <div className="logo fade-in" style={{ animationDelay: '0.1s' }}>
+            <div className="logo-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="2"/></svg>
+            </div>
+            UniCard
+          </div>
+          <div className="nav-links fade-in" style={{ animationDelay: '0.1s' }}>
+            <Link href="/login" className="nav-link">Login</Link>
+          </div>
+        </header>
+
+        <main className="main-content">
+          {/* Hero Section */}
+          <section className="hero-section">
+            <div className="pill-badge fade-in" style={{ animationDelay: '0.2s' }}>
+              <span className="pill-dot" /> B2B2C Checkout Infrastructure
+            </div>
+            <h1 className="hero-title fade-in" style={{ animationDelay: '0.3s' }}>
+              Accept Any Token.<br />
+              <span className="gradient-text">Verify Anywhere.</span><br />
+              Settle on Arbitrum.
             </h1>
-            <p className="hero-sub fade-in">
-              The chain-abstracted checkout engine — the &ldquo;Stripe of Web3.&rdquo;
-              Integrate in minutes. Let buyers pay with any asset on any chain. You receive USDC on Arbitrum.
+            <p className="hero-sub fade-in" style={{ animationDelay: '0.4s' }}>
+              The frictionless checkout engine for Web3. Buyers pay with any assets spread across chains. Funds are securely routed to an Arbitrum Treasury.
             </p>
 
-            {/* Feature chips */}
-            <div className="feature-chips stagger-in">
-              {[
-                { icon: '-', label: 'EIP-7702 Universal Account' },
-                { icon: '-', label: 'Cross-chain payments' },
-                { icon: '-', label: 'Magic embedded wallet' },
-                { icon: '-', label: 'Arbitrum settlement' },
-              ].map((f) => (
-                <div key={f.label} className="feature-chip glass-card">
-                  <span>{f.icon}</span>
-                  <span>{f.label}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* B2B / B2C CTAs */}
-            <div className="hero-ctas fade-in" style={{ marginTop: '2.5rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-              <Link href="/demo" style={{
-                padding: '16px 28px', background: 'linear-gradient(135deg,#7c3aed,#06b6d4)',
-                borderRadius: '12px', color: '#fff', fontWeight: 600, textDecoration: 'none',
-                boxShadow: '0 8px 32px rgba(124,58,237,0.3)', display: 'flex', alignItems: 'center', gap: '8px'
-              }}>
-                 Try Demo
+            {/* CTAs */}
+            <div className="cta-group fade-in" style={{ animationDelay: '0.5s' }}>
+              <Link href="/demo" className="btn-primary">
+                Try Demo <span className="arrow">→</span>
               </Link>
-              <Link href="/dashboard" style={{
-                padding: '16px 28px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: '12px', color: '#fff', fontWeight: 600, textDecoration: 'none',
-                display: 'flex', alignItems: 'center', gap: '8px', transition: 'background 0.2s'
-              }}>
-                Sign In
+              <Link href="/login" className="btn-secondary">
+                Login
               </Link>
             </div>
-          </div>
+          </section>
 
-          {/* Integration Visual */}
-          <div className="hero-visual fade-in" style={{
-            background: 'linear-gradient(135deg, rgba(124,58,237,0.1), rgba(6,182,212,0.1))',
-            border: '1px solid rgba(255,255,255,0.08)', borderRadius: '24px', padding: '24px',
-            display: 'flex', flexDirection: 'column', gap: '16px'
-          }}>
-            <div style={{ padding: '16px', background: 'rgba(0,0,0,0.1)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-              <div style={{ fontSize: '11px', color: '#888', marginBottom: '8px', fontFamily: 'monospace' }}>POST /api/sessions</div>
-              <div style={{ color: '#fff', fontSize: '14px', whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}>
-                {`{
-   "item": "hackathon-ticket",
-   "successUrl": "https://yoursite.com/success"
-}`}
+          {/* Duality Section: Business vs Buyer */}
+          <section className="duality-section fade-in" style={{ animationDelay: '0.7s' }}>
+            <div className="duality-card business-card">
+              <div className="duality-header">
+                <h3>For Businesses & Sellers</h3>
+                <span className="badge">Stripe-like API</span>
               </div>
+              <ul className="feature-list">
+                <li><strong>Treasury Settlement:</strong> Don't worry about managing 10 different networks. Payments route seamlessly to our Arbitrum Treasury for future withdrawal.</li>
+                <li><strong>API Integration:</strong> Simply call our <code>POST /api/sessions</code> endpoint from your backend with the checkout details.</li>
+                <li><strong>Verified Analytics:</strong> Access a single dashboard to track all cross-chain customer purchases with verifiable on-chain proofs.</li>
+              </ul>
             </div>
-            <div style={{ textAlign: 'center', color: '#7c3aed' }}>↓</div>
-            <div style={{ padding: '16px', background: 'rgba(124,58,237,0.15)', borderRadius: '12px', border: '1px solid rgba(124,58,237,0.3)', color: '#fff', textAlign: 'center', fontWeight: 'bold' }}>
-              Redirect buyer to UniCard
+
+            <div className="duality-card buyer-card">
+              <div className="duality-header">
+                <h3>For Your Customers</h3>
+                <span className="badge">Zero Friction</span>
+              </div>
+              <ul className="feature-list">
+                <li><strong>Seamless Sign In:</strong> Fast authentication with Google, Apple, or Email. No tedious seed phrases required to get started.</li>
+                <li><strong>No Manual Bridging:</strong> Buyers pay with assets spread across chains. The Particle SDK handles the complex cross-chain routing automatically.</li>
+                <li><strong>Instant Utility:</strong> Complete the purchase and immediately unlock digital assets or event access, backed by the Universal Account.</li>
+              </ul>
             </div>
-          </div>
-        </section>
+          </section>
 
-        {/* How it works — buyer flow */}
-        <section className="how-section">
-          <h2 className="section-title gradient-text">How it works — for buyers</h2>
-          <div className="steps-grid stagger-in">
-            {[
-              { step: '01', title: 'Login with Email', desc: 'One-click via Magic. No MetaMask. No seed phrase. Your embedded wallet is ready instantly.' },
-              { step: '02', title: 'Universal Account', desc: 'EIP-7702 transforms your EOA into a cross-chain powerhouse — happens automatically.' },
-              { step: '03', title: 'Pay from Anywhere', desc: 'USDC on Base, USDT on Polygon — funds route automatically. No bridging, ever.' },
-              { step: '04', title: 'Receive Your Pass', desc: 'Payment settles on Arbitrum. Your pass is minted on-chain with QR code + Arbiscan proof.' },
-            ].map((s) => (
-              <div key={s.step} className="step-card glass-card">
-                <div className="step-number">{s.step}</div>
-                <h3 className="step-title">{s.title}</h3>
-                <p className="step-desc">{s.desc}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* For Sellers — how the checkout layer works */}
-        <section className="seller-section">
-          <div className="seller-header">
-            <span className="seller-pill">For Sellers &amp; Organizers</span>
-            <h2 className="section-title gradient-text">The Stripe Checkout of Web3</h2>
-            <p className="seller-sub">
-              Integrate UniCard in minutes. Your buyers pay with any asset on any chain.
-              You receive USDC on Arbitrum with full on-chain proof.
-            </p>
-          </div>
-
-          <div className="seller-flow">
-            {[
-              {
-                num: '1',
-                title: 'List your item',
-                desc: 'Add your event, membership, or digital product — we give you a shareable UniCard checkout URL.',
-              },
-              {
-                num: '2',
-                title: 'Buyer clicks your link',
-                desc: 'They land on our checkout page pre-loaded with your item. We handle login, wallet creation, and payment.',
-              },
-              {
-                num: '3',
-                title: 'They pay from any chain',
-                desc: 'USDC on Base, ETH on Mainnet, USDT on Polygon — Particle Universal Accounts route and settle automatically.',
-              },
-              {
-                num: '4',
-                title: 'You get USDC + on-chain proof',
-                desc: 'Settlement arrives on Arbitrum One. Buyer gets a verifiable pass. You get an Arbiscan receipt.',
-              },
-            ].map((step, i) => (
-              <div key={step.num} className="seller-step">
-                <div className="seller-step-icon gradient-border">
-                  {step.num}
-                </div>
-                {i < 3 && <div className="seller-connector" />}
-                <h4 className="seller-step-title">{step.title}</h4>
-                <p className="seller-step-desc">{step.desc}</p>
-              </div>
-            ))}
-          </div>
-        </section>
+          {/* Footer */}
+          <footer className="footer fade-in" style={{ animationDelay: '0.8s' }}>
+            <p>Powered by <strong>Particle Network</strong> & <strong>Magic</strong></p>
+            <p className="footer-sub">Built for seamless Web3 Experience.</p>
+          </footer>
+        </main>
       </div>
 
-      <style jsx>{`
-        /* ── Landing ── */
+      <style jsx global>{`
+        :root {
+          --bg-color: #fafafa;
+          --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+          --text-primary: #0f172a;
+          --text-secondary: #64748b;
+          --color-accent-1: #7c3aed;
+          --color-accent-2: #06b6d4;
+          --border-color: #e2e8f0;
+        }
+
+        body {
+          margin: 0;
+          padding: 0;
+          background-color: var(--bg-color);
+          color: var(--text-primary);
+          font-family: var(--font-sans);
+          overflow-x: hidden;
+          -webkit-font-smoothing: antialiased;
+        }
+
+        /* Ambient Orbs & Background (Light Mode style) */
         .landing-root {
+          position: relative;
           min-height: 100vh;
-        }
-        /* Hero */
-        .hero-section {
-          display: grid;
-          grid-template-columns: 1.2fr 1fr;
-          gap: 3rem;
-          align-items: center;
-          max-width: 1100px;
-          margin: 0 auto;
-          padding: 5rem 2rem 3rem;
-        }
-        @media (max-width: 768px) {
-          .hero-section {
-            grid-template-columns: 1fr;
-            padding: 3rem 1.25rem 2rem;
-          }
-          .hero-visual { order: 2; margin-top: 2rem; }
-        }
-        .hero-title {
-          font-size: clamp(2.5rem, 5vw, 3.5rem);
-          font-weight: 900;
-          line-height: 1.1;
-          margin-bottom: 1.25rem;
-          letter-spacing: -0.02em;
-        }
-        .hero-sub {
-          color: var(--text-secondary);
-          font-size: 1rem;
-          line-height: 1.7;
-          margin-bottom: 2rem;
-          max-width: 480px;
-        }
-        .feature-chips {
           display: flex;
-          flex-wrap: wrap;
-          gap: 0.5rem;
+          flex-direction: column;
+          align-items: center;
+          overflow: hidden;
         }
-        .feature-chip {
+
+        .bg-pattern {
+          position: absolute;
+          inset: 0;
+          background-image: 
+            radial-gradient(#cbd5e1 1px, transparent 1px);
+          background-size: 40px 40px;
+          z-index: 0;
+          mask-image: radial-gradient(ellipse at top, black 30%, transparent 80%);
+          -webkit-mask-image: radial-gradient(ellipse at top, black 30%, transparent 80%);
+          pointer-events: none;
+          opacity: 0.5;
+        }
+
+        .bg-orb {
+          position: absolute;
+          border-radius: 50%;
+          filter: blur(100px);
+          opacity: 0.15;
+          z-index: 0;
+          pointer-events: none;
+        }
+        .orb-1 { width: 500px; height: 500px; background: var(--color-accent-1); top: -200px; left: -100px; }
+        .orb-2 { width: 400px; height: 400px; background: var(--color-accent-2); top: 20%; right: -150px; }
+
+        /* Navbar */
+        .navbar {
+          width: 100%;
+          max-width: 1200px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 1.5rem 2rem;
+          z-index: 10;
+        }
+
+        .logo {
           display: flex;
           align-items: center;
-          gap: 6px;
-          padding: 6px 12px;
-          border-radius: 20px;
-          font-size: 0.75rem;
-          font-weight: 500;
-          color: var(--text-secondary);
-        }
-        /* How it works */
-        .how-section {
-          max-width: 1100px;
-          margin: 0 auto;
-          padding: 4rem 2rem;
-        }
-        .section-title {
-          font-size: 1.75rem;
+          gap: 12px;
           font-weight: 800;
-          margin-bottom: 0.5rem;
+          font-size: 1.25rem;
+          letter-spacing: -0.03em;
+          color: var(--text-primary);
         }
-        .section-sub {
-          color: var(--text-secondary);
-          font-size: 0.875rem;
-          margin-bottom: 2rem;
-        }
-        .steps-grid {
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 1rem;
-        }
-        @media (max-width: 900px) {
-          .steps-grid {
-            grid-template-columns: 1fr 1fr;
-          }
-        }
-        @media (max-width: 540px) {
-          .steps-grid {
-            grid-template-columns: 1fr;
-          }
-        }
-        .step-card {
-          padding: 1.5rem;
-          display: flex;
-          flex-direction: column;
-          gap: 0.75rem;
-        }
-        .step-number {
-          font-size: 0.6875rem;
-          font-weight: 700;
-          color: var(--color-primary-light);
-          letter-spacing: 0.1em;
-        }
-        .step-title {
-          font-size: 0.9375rem;
-          font-weight: 700;
-        }
-        .step-desc {
-          font-size: 0.8125rem;
-          color: var(--text-secondary);
-          line-height: 1.5;
-        }
-        /* ── Seller section ── */
-        .seller-section {
-          max-width: 1100px;
-          margin: 0 auto;
-          padding: 1rem 2rem 4rem;
-        }
-        .seller-header {
-          margin-bottom: 2.5rem;
-        }
-        .seller-pill {
-          display: inline-block;
-          background: rgba(6, 182, 212, 0.08);
-          border: 1px solid rgba(6, 182, 212, 0.2);
-          border-radius: 20px;
-          padding: 4px 12px;
-          font-size: 0.6875rem;
-          font-weight: 600;
-          color: var(--color-accent-light);
-          letter-spacing: 0.05em;
-          text-transform: uppercase;
-          margin-bottom: 0.75rem;
-        }
-        .seller-sub {
-          color: var(--text-secondary);
-          font-size: 0.9375rem;
-          line-height: 1.6;
-          max-width: 560px;
-          margin-bottom: 0;
-        }
-        .seller-flow {
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 1.5rem;
-          position: relative;
-          margin-bottom: 2rem;
-        }
-        @media (max-width: 900px) {
-          .seller-flow {
-            grid-template-columns: 1fr 1fr;
-          }
-          .seller-connector { display: none; }
-        }
-        @media (max-width: 540px) {
-          .seller-flow { grid-template-columns: 1fr; }
-        }
-        .seller-step {
-          display: flex;
-          flex-direction: column;
-          gap: 0.75rem;
-          position: relative;
-        }
-        .seller-step-icon {
-          width: 48px;
-          height: 48px;
-          border-radius: 12px;
-          background: var(--glass-bg);
-          border: 1px solid var(--glass-border);
+
+        .logo-icon {
+          width: 32px;
+          height: 32px;
+          background: linear-gradient(135deg, var(--color-accent-1), var(--color-accent-2));
+          border-radius: 8px;
           display: flex;
           align-items: center;
           justify-content: center;
-          color: var(--color-primary-light);
-          font-weight: bold;
-          font-size: 1.25rem;
+          color: white;
+          box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
         }
-        .seller-connector {
-          position: absolute;
-          top: 24px;
-          right: -0.75rem;
-          width: 1.5rem;
-          height: 1px;
-          background: var(--glass-border);
-          z-index: 0;
-        }
-        .seller-step-title {
-          font-size: 0.9375rem;
-          font-weight: 700;
-        }
-        .seller-step-desc {
-          font-size: 0.8125rem;
+
+        .nav-link {
           color: var(--text-secondary);
-          line-height: 1.5;
+          text-decoration: none;
+          font-weight: 600;
+          font-size: 0.9375rem;
+          transition: color 0.2s;
+        }
+        .nav-link:hover {
+          color: var(--color-accent-1);
+        }
+
+        /* Main Content */
+        .main-content {
+          width: 100%;
+          max-width: 1200px;
+          padding: 3rem 2rem 6rem;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          z-index: 10;
+        }
+
+        /* Hero */
+        .hero-section {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+          margin-bottom: 5rem;
+          max-width: 800px;
+        }
+
+        .pill-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 6px 16px;
+          background: #ffffff;
+          border: 1px solid var(--border-color);
+          border-radius: 999px;
+          font-size: 0.8125rem;
+          font-weight: 600;
+          color: var(--text-secondary);
+          margin-bottom: 2rem;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+        .pill-dot {
+          width: 8px;
+          height: 8px;
+          background: var(--color-accent-2);
+          border-radius: 50%;
+          box-shadow: 0 0 10px var(--color-accent-2);
+        }
+
+        .hero-title {
+          font-size: clamp(2.5rem, 6vw, 4.5rem);
+          font-weight: 900;
+          line-height: 1.1;
+          letter-spacing: -0.04em;
+          margin: 0 0 1.5rem 0;
+          color: #0f172a;
+        }
+
+        .gradient-text {
+          background: linear-gradient(135deg, var(--color-accent-1), var(--color-accent-2));
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+
+        .hero-sub {
+          font-size: clamp(1rem, 2vw, 1.25rem);
+          color: var(--text-secondary);
+          max-width: 650px;
+          line-height: 1.6;
+          margin-bottom: 2.5rem;
+        }
+
+        /* Buttons & CTAs */
+        .cta-group {
+          display: flex;
+          gap: 1rem;
+          align-items: center;
+          justify-content: center;
+          flex-wrap: wrap;
+        }
+
+        .btn-primary, .btn-secondary {
+          padding: 0.875rem 2.25rem;
+          border-radius: 999px;
+          font-size: 1rem;
+          font-weight: 600;
+          text-decoration: none;
+          transition: all 0.3s cubic-bezier(0.25, 1.25, 0.5, 1);
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+        }
+
+        .btn-primary {
+          background: #0f172a;
+          color: #fff;
+          box-shadow: 0 4px 14px rgba(15, 23, 42, 0.2);
+        }
+        .btn-primary .arrow {
+          transition: transform 0.2s;
+        }
+        .btn-primary:hover {
+          transform: translateY(-3px) scale(1.02);
+          box-shadow: 0 8px 25px rgba(15, 23, 42, 0.3);
+          background: #1e293b;
+        }
+        .btn-primary:hover .arrow {
+          transform: translateX(4px);
+        }
+        .btn-primary:active {
+          transform: translateY(0) scale(0.98);
+        }
+
+        .btn-secondary {
+          background: #ffffff;
+          color: #0f172a;
+          border: 1px solid var(--border-color);
+          box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+        .btn-secondary:hover {
+          border-color: #cbd5e1;
+          background: #f8fafc;
+          transform: translateY(-3px);
+          box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+        }
+        .btn-secondary:active {
+          transform: translateY(0);
+        }
+
+        /* Visual Diagram Flow */
+        .diagram-section {
+          width: 100%;
+          max-width: 900px;
+          margin-bottom: 6rem;
+        }
+        .diagram-container {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          background: #ffffff;
+          border: 1px solid var(--border-color);
+          border-radius: 24px;
+          padding: 3rem 2rem;
+          box-shadow: 0 10px 40px rgba(0,0,0,0.03);
+          position: relative;
+        }
+        
+        @media (max-width: 768px) {
+          .diagram-container {
+            flex-direction: column;
+            gap: 2rem;
+          }
+          .connector { transform: rotate(90deg); margin: -10px 0; }
+        }
+
+        .node {
+          flex: 1;
+          text-align: center;
+          padding: 1.5rem;
+          background: #fafafa;
+          border: 1px solid var(--border-color);
+          border-radius: 16px;
+          z-index: 2;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+          transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .node:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 12px 30px rgba(0,0,0,0.06);
+        }
+        .node-icon {
+          font-size: 2rem;
+          margin-bottom: 0.75rem;
+        }
+        .node h4 {
+          margin: 0 0 0.5rem 0;
+          font-size: 1.05rem;
+          font-weight: 700;
+          color: #0f172a;
+        }
+        .node p {
+          margin: 0;
+          font-size: 0.85rem;
+          color: #64748b;
+          line-height: 1.4;
+        }
+        
+        .connector {
+          display: flex;
+          align-items: center;
+          position: relative;
+          width: 60px;
+          justify-content: center;
+          z-index: 1;
+        }
+        .connector-line {
+          position: absolute;
+          width: 100%;
+          height: 2px;
+          background: var(--border-color);
+        }
+        .connector-icon {
+          background: white;
+          border: 1px solid var(--border-color);
+          border-radius: 50%;
+          width: 32px;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.85rem;
+          position: relative;
+          z-index: 3;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+        
+        .unicard-node {
+          background: #ffffff;
+          border-color: #cbd5e1;
+          box-shadow: 0 10px 30px rgba(124,58,237,0.08);
+          transform: scale(1.05);
+        }
+        .unicard-node:hover {
+          transform: scale(1.05) translateY(-4px);
+        }
+
+        /* Duality Section - B2B vs B2C */
+        .duality-section {
+          width: 100%;
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+          gap: 2rem;
+        }
+
+        .duality-card {
+          background: #ffffff;
+          border: 1px solid var(--border-color);
+          border-radius: 20px;
+          padding: 2.5rem;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+          transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+        }
+        .duality-card:hover {
+          transform: translateY(-4px);
+          border-color: #cbd5e1;
+          box-shadow: 0 12px 30px rgba(0,0,0,0.06);
+        }
+
+        .business-card {
+          border-top: 4px solid var(--color-accent-1);
+        }
+        .buyer-card {
+          border-top: 4px solid var(--color-accent-2);
+        }
+
+        .duality-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 2rem;
+          border-bottom: 1px solid var(--border-color);
+          padding-bottom: 1rem;
+        }
+
+        .duality-header h3 {
+          margin: 0;
+          font-size: 1.25rem;
+          font-weight: 800;
+          color: #0f172a;
+        }
+
+        .badge {
+          background: #f1f5f9;
+          color: #475569;
+          font-size: 0.75rem;
+          font-weight: 700;
+          padding: 4px 10px;
+          border-radius: 999px;
+        }
+
+        .feature-list {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 1.25rem;
+        }
+
+        .feature-list li {
+          font-size: 0.9375rem;
+          line-height: 1.6;
+          color: var(--text-secondary);
+        }
+
+        .feature-list strong {
+          color: #0f172a;
+          display: block;
+          margin-bottom: 4px;
+        }
+
+        /* Footer */
+        .footer {
+          margin-top: 6rem;
+          font-size: 0.875rem;
+          color: var(--text-secondary);
+          text-align: center;
+          border-top: 1px solid var(--border-color);
+          padding-top: 2rem;
+          width: 100%;
+        }
+        .footer strong {
+          color: #0f172a;
+        }
+        .footer-sub {
+          margin-top: 8px;
+          font-size: 0.8rem;
+          color: #94a3b8;
+        }
+
+        /* Animations */
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(15px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in {
+          opacity: 0;
+          animation: fadeUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
         }
       `}</style>
     </>
