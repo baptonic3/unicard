@@ -1,9 +1,10 @@
 import { EVMExtension } from '@magic-ext/evm';
+import { OAuthExtension } from '@magic-ext/oauth2';
 import { Magic as MagicBase } from 'magic-sdk';
 import { ReactNode, createContext, useContext, useEffect, useMemo, useState, Dispatch, SetStateAction } from 'react';
 import { getToken } from '@/utils/common';
 
-export type Magic = MagicBase<[EVMExtension]>;
+export type Magic = MagicBase<[EVMExtension, OAuthExtension]>;
 
 type MagicContextType = {
   magic: Magic | null;
@@ -39,6 +40,7 @@ const MagicProvider = ({ children }: { children: ReactNode }) => {
               default: true,
             },
           ]),
+          new OAuthExtension(),
         ],
       });
 

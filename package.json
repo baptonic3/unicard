@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@magic-ext/evm": "^1.6.0",
+    "@magic-ext/oauth2": "^15.10.0",
     "@particle-network/universal-account-sdk": "^2.0.0-beta.3",
     "@prisma/client": "^5.22.0",
     "@tailwindcss/postcss": "^4.3.2",
