@@ -1,102 +1,12 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, useEffect } from 'react';
 import { useMagic } from '@/hooks/MagicProvider';
 import { getUserAddress, truncateAddress, saveUserInfo } from '@/utils/common';
 import { useUniversalAccount } from '@/hooks/UniversalAccountProvider';
 import Header from '@/components/Header';
 
-// ────────────────────────────────────────
-// Onboarding Screen — light-theme, matches wallet
-// ────────────────────────────────────────
-function OnboardingScreen({ token, setToken }: { token: string; setToken: (t: string) => void }) {
-  const { magic } = useMagic();
-  const [email, setEmail] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  const handleLogin = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!email) return;
-    try {
-      setIsLoading(true);
-      setError('');
-      const didToken = await magic?.auth.loginWithEmailOTP({ email });
-      const metadata = await magic?.user.getInfo();
-      const publicAddress = metadata?.wallets?.ethereum?.publicAddress;
-      if (!didToken || !publicAddress) throw new Error('Login failed');
-      setToken(didToken);
-      saveUserInfo(didToken, 'EMAIL', publicAddress);
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : '';
-      if (!msg.includes('canceled')) setError('Login failed. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '64px', alignItems: 'center', maxWidth: '860px', margin: '80px auto', padding: '0 16px' }}>
-      {/* LEFT: branding */}
-      <div>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', marginBottom: '32px', padding: '8px 16px', background: '#f1f5f9', borderRadius: '20px' }}>
-          <div style={{ width: '28px', height: '28px', background: 'linear-gradient(135deg,#7c3aed,#06b6d4)', borderRadius: '7px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="2"/></svg>
-          </div>
-          <span style={{ fontSize: '14px', fontWeight: 700, color: '#334155' }}>UniCard Wallet</span>
-        </div>
-        <h1 style={{ fontSize: '38px', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.15, marginBottom: '16px', color: '#0f172a' }}>Your Universal<br/>Crypto Wallet</h1>
-        <p style={{ color: '#64748b', fontSize: '15px', lineHeight: 1.7, marginBottom: '36px' }}> Pay for anything with any token — UniCard handles the rest.</p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {[
-            { icon: '⚡', label: 'Magic Email Login', sub: 'No seed phrase, no extension' },
-            { icon: '🌐', label: 'Cross-chain', sub: 'Pay with any token on any chain' },
-            { icon: '🔒', label: 'EIP-7702 Smart Account', sub: 'Smart account, standard EOA' },
-          ].map((f) => (
-            <div key={f.label} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-              <div style={{ fontSize: '20px', lineHeight: 1, paddingTop: '2px', width: '28px', flexShrink: 0 }}>{f.icon}</div>
-              <div>
-                <div style={{ fontWeight: 600, fontSize: '14px', color: '#111' }}>{f.label}</div>
-                <div style={{ fontSize: '13px', color: '#94a3b8', marginTop: '2px' }}>{f.sub}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* RIGHT: email OTP form */}
-      <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '24px', padding: '40px', boxShadow: '0 8px 30px rgba(0,0,0,0.06)' }}>
-        <h2 style={{ fontSize: '22px', fontWeight: 700, marginBottom: '8px', letterSpacing: '-0.02em', color: '#0f172a' }}>Get started</h2>
-        <p style={{ color: '#64748b', fontSize: '14px', marginBottom: '28px', lineHeight: 1.6 }}>Enter your email to create or access your wallet. No download required.</p>
-        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <input
-            type="email"
-            placeholder="your@email.com"
-            value={email}
-            onChange={(e) => { setEmail(e.target.value); setError(''); }}
-            disabled={isLoading}
-            style={{ width: '100%', padding: '14px 16px', fontSize: '15px', border: '1.5px solid #e2e8f0', borderRadius: '12px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', color: '#111', background: '#fafafa', transition: 'border-color 0.2s' }}
-          />
-          {error && <p style={{ color: '#ef4444', fontSize: '13px', margin: 0 }}>{error}</p>}
-          <button
-            type="submit"
-            disabled={isLoading || !email}
-            style={{ width: '100%', padding: '14px', background: isLoading || !email ? '#cbd5e1' : 'linear-gradient(135deg,#7c3aed,#06b6d4)', color: '#fff', border: 'none', borderRadius: '12px', fontSize: '15px', fontWeight: 700, cursor: isLoading || !email ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'background 0.2s' }}
-          >
-            {isLoading ? (
-              <><span style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.35)', borderTop: '2px solid #fff', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />Sending OTP...</>
-            ) : 'Continue with Email →'}
-          </button>
-        </form>
-        <div style={{ textAlign: 'center', marginTop: '24px', paddingTop: '20px', borderTop: '1px solid #f1f5f9' }}>
-          <p style={{ fontSize: '12px', color: '#94a3b8', margin: 0 }}>Powered by <strong style={{ color: '#7c3aed' }}>Magic</strong> × <strong style={{ color: '#06b6d4' }}>Particle Network</strong></p>
-          <p style={{ fontSize: '11px', color: '#cbd5e1', marginTop: '4px' }}>Your keys, your account. Non-custodial.</p>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export default function Dashboard() {
   const router = useRouter();
@@ -125,12 +35,15 @@ export default function Dashboard() {
     }
   }, [token]);
 
+  // Redirect to unified /login if not authenticated
+  useEffect(() => {
+    if (mounted && !token && !getUserAddress()) {
+      router.replace('/login?next=/dashboard');
+    }
+  }, [mounted, token]);
+
   if (!mounted) return null;
-
-  const isLoggedIn = !!token && !!address;
   const balance = Number(primaryAssets?.totalAmountInUSD ?? 0).toFixed(2);
-
-  // Conditionally render the pending event if ?pending=true
   const isPendingEvent = router.query.pending === 'true';
 
   return (
@@ -145,12 +58,12 @@ export default function Dashboard() {
       <div style={{ backgroundColor: t.bg, minHeight: '100vh', color: t.text, fontFamily: 'Inter, sans-serif', transition: 'background-color 0.25s, color 0.25s' }}>
 
         {/* SECONDARY NAV STRIP */}
-        <div style={{ borderBottom: `1px solid ${t.navBorder}`, backgroundColor: t.navBg, transition: 'background-color 0.25s' }}>
+        {/* <div style={{ borderBottom: `1px solid ${t.navBorder}`, backgroundColor: t.navBg, transition: 'background-color 0.25s' }}>
           <nav style={{ maxWidth: '1024px', margin: '0 auto', padding: '0 24px', display: 'flex', gap: '8px', alignItems: 'center' }}>
             <Link href="/dashboard" style={{ display: 'inline-block', padding: '14px 16px', color: t.activeTab, textDecoration: 'none', fontWeight: 600, fontSize: '14px', borderBottom: `2px solid ${t.activeTab}` }}>Wallet</Link>
             <span style={{ display: 'inline-block', padding: '14px 16px', color: t.subtext, fontSize: '14px', cursor: 'default' }}>Transactions</span>
             <span style={{ display: 'inline-block', padding: '14px 16px', color: t.subtext, fontSize: '14px', cursor: 'default' }}>Settings</span>
-            {/* Dark mode toggle */}
+            
             <div style={{ marginLeft: 'auto' }}>
               <button
                 onClick={() => setIsDark(d => !d)}
@@ -164,25 +77,22 @@ export default function Dashboard() {
                 }}
               >
                 {isDark
-                  ? /* Sun */ <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f0f0f5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-                  : /* Moon */ <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#334155" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                  ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f0f0f5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                  : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#334155" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
                 }
               </button>
             </div>
           </nav>
-        </div>
+        </div> */}
 
         {/* MAIN BODY */}
         <main style={{ maxWidth: '1024px', margin: '0 auto', padding: '48px 24px' }}>
-          {!isLoggedIn ? (
-            <OnboardingScreen token={token} setToken={setToken} />
-          ) : (
             <div className="fade-in">
               {/* WELCOME */}
               <div style={{ marginBottom: '32px' }}>
                 <h1 style={{ fontSize: '36px', fontWeight: 700, letterSpacing: '-0.02em', marginBottom: '8px', color: t.text }}>Welcome back</h1>
                 <p style={{ color: t.subtext, fontSize: '14px' }}>
-                  Your EOA <span style={{ fontFamily: 'monospace', fontWeight: 600, color: isDark ? '#a5b4fc' : '#334155' }}>{truncateAddress(address)}</span>
+                  Your EOA <span style={{ fontFamily: 'monospace', fontWeight: 600, color: isDark ? '#a5b4fc' : '#334155' }}>{truncateAddress(address || '')}</span>
                 </p>
               </div>
 
@@ -291,7 +201,7 @@ export default function Dashboard() {
                       
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         {[
-                          { label: 'Your EOA', value: truncateAddress(address) },
+                          { label: 'Your EOA', value: truncateAddress(address || '') },
                           { label: 'EVM UA', value: accountInfo ? truncateAddress(accountInfo.evmSmartAccount) : 'Loading...' },
                           { label: 'Solana UA', value: accountInfo ? truncateAddress(accountInfo.solanaSmartAccount) : 'Loading...' },
                           { label: 'Chain', value: 'Arbitrum • 42161', bold: true },
@@ -354,7 +264,7 @@ export default function Dashboard() {
                       
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         {[
-                          { label: 'Your EOA', value: truncateAddress(address) },
+                          { label: 'Your EOA', value: truncateAddress(address || '') },
                           { label: 'EVM UA', value: accountInfo ? truncateAddress(accountInfo.evmSmartAccount) : 'Loading...' },
                           { label: 'Solana UA', value: accountInfo ? truncateAddress(accountInfo.solanaSmartAccount) : 'Loading...' },
                           { label: 'Chain', value: 'Arbitrum • 42161', bold: true },
@@ -386,9 +296,9 @@ export default function Dashboard() {
                               <div key={asset.chainId + asset.symbol} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                   <div style={{ width: '24px', height: '24px', background: '#28a0f0', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ color: '#fff', fontSize: '10px', fontWeight: 'bold' }}>{asset.symbol ? asset.symbol[0] : 'T'}</span></div>
-                                  <span style={{ fontSize: '14px', fontWeight: 600, color: '#111' }}>{chainName} <span style={{ color: '#94a3b8', fontWeight: 400 }}>{asset.symbol || 'Token'}</span></span>
+                                  <span style={{ fontSize: '14px', fontWeight: 600, color: t.text }}>{chainName} <span style={{ color: t.subtext, fontWeight: 400 }}>{asset.symbol || 'Token'}</span></span>
                                 </div>
-                                <span style={{ fontSize: '14px', fontWeight: 600 }}>${value}</span>
+                                <span style={{ fontSize: '14px', fontWeight: 600, color: t.text }}>${value}</span>
                               </div>
                             );
                           })
@@ -402,7 +312,7 @@ export default function Dashboard() {
                     </div>
                   </div>
 
-                  <div style={{ background: t.surface, border: `1px solid ${isDark ? t.accent + '33' : '#bbf7d0'}`, borderRadius: '20px', padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+                  {/* <div style={{ background: t.surface, border: `1px solid ${isDark ? t.accent + '33' : '#bbf7d0'}`, borderRadius: '20px', padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                       <div style={{ width: '48px', height: '48px', borderRadius: '50%', border: '1px dashed #00e599', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00e599" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
@@ -415,12 +325,12 @@ export default function Dashboard() {
                     <button style={{ padding: '12px 24px', background: '#00e599', color: '#fff', fontWeight: 600, fontSize: '14px', border: 'none', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
                       Add funds <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                     </button>
-                  </div>
+                  </div> */}
 
                   <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: '24px', padding: '24px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                       <h3 style={{ fontSize: '18px', fontWeight: 700, color: t.text }}>Recent activity</h3>
-                      <span style={{ fontSize: '13px', fontWeight: 600, color: t.accent, cursor: 'pointer' }}>View all →</span>
+                      {/* <span style={{ fontSize: '13px', fontWeight: 600, color: t.accent, cursor: 'pointer' }}>View all →</span> */}
                     </div>
 
                     {passes.length === 0 ? (
@@ -448,7 +358,6 @@ export default function Dashboard() {
                 </>
               )}
             </div>
-          )}
         </main>
       </div>
     </>

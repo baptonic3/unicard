@@ -46,12 +46,6 @@ export default function PassCard({
 
   return (
     <div style={{
-      position: 'fixed', inset: 0, zIndex: 9999,
-      background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(8px)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      padding: '16px',
-    }}>
-      <div style={{
         background: 'linear-gradient(160deg, #1a0a2e 0%, #0a0a1f 100%)',
         border: '1px solid rgba(124,58,237,0.35)',
         borderRadius: 24,
@@ -179,6 +173,5 @@ export default function PassCard({
           <span style={{ color: '#333', fontSize: 11 }}>× Particle Network × Arbitrum</span>
         </div>
       </div>
-    </div>
   );
 }

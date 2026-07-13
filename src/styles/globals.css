@@ -82,7 +82,7 @@ body {
 
 /* Gradient button */
 .btn-primary {
-  background: var(--gradient-primary);
+  background: #00e599;
   color: white;
   border: none;
   border-radius: 12px;
