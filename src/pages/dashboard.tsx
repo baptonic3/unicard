@@ -6,7 +6,8 @@ import { useMagic } from '@/hooks/MagicProvider';
 import { getUserAddress, truncateAddress, saveUserInfo } from '@/utils/common';
 import { useUniversalAccount } from '@/hooks/UniversalAccountProvider';
 import Header from '@/components/Header';
-
+import DelegationCard from '@/components/DelegationCard';
+import UnifiedBalanceCard from '@/components/UnifiedBalanceCard';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -245,71 +246,10 @@ export default function Dashboard() {
                     </div>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
-                    <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: '24px', padding: '24px', boxShadow: t.cardShadow }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', borderBottom: `1px solid ${t.border}`, paddingBottom: '16px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00e599" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-                          </div>
-                          <h3 style={{ fontSize: '16px', fontWeight: 700, color: t.text }}>EIP-7702 Delegation</h3>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <span style={{ fontSize: '13px', fontWeight: 600, color: '#00e599' }}>{isDelegated ? 'Active' : 'Unsigned'}</span>
-                          <div style={{ width: '40px', height: '24px', background: isDelegated ? '#00e599' : '#cbd5e1', borderRadius: '12px', position: 'relative' }}>
-                            <div style={{ width: '20px', height: '20px', background: '#fff', borderRadius: '50%', position: 'absolute', top: '2px', left: isDelegated ? '18px' : '2px' }}></div>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                        {[
-                          { label: 'Your EOA', value: truncateAddress(address || '') },
-                          { label: 'EVM UA', value: accountInfo ? truncateAddress(accountInfo.evmSmartAccount) : 'Loading...' },
-                          { label: 'Solana UA', value: accountInfo ? truncateAddress(accountInfo.solanaSmartAccount) : 'Loading...' },
-                          { label: 'Chain', value: 'Arbitrum • 42161', bold: true },
-                          { label: 'Mode', value: 'EIP-7702 Inline', bold: true }
-                        ].map(row => (
-                          <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '14px', color: t.subtext }}>{row.label}</span>
-                            <span style={{ fontSize: '14px', fontWeight: row.bold ? 600 : 500, color: t.text, fontFamily: row.bold ? 'inherit' : 'monospace' }}>{row.value}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
+                      <DelegationCard />
 
-                    <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: '24px', padding: '24px', display: 'flex', flexDirection: 'column', boxShadow: t.cardShadow }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                        <h3 style={{ fontSize: '16px', fontWeight: 700, color: t.text }}>Chains & assets</h3>
-                        <span style={{ fontSize: '12px', color: t.subtext }}>3 networks</span>
-                      </div>
-                      
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', flex: 1 }}>
-                        {(!primaryAssets?.assets || primaryAssets.assets.length === 0) ? (
-                          <div style={{ fontSize: '14px', color: t.subtext, marginTop: '16px' }}>Loading assets or wallet empty...</div>
-                        ) : (
-                          primaryAssets.assets.map((asset: any) => {
-                            const value = (Number(asset.amount) * (asset.price || 0)).toFixed(2);
-                            if (Number(value) === 0) return null;
-                            const chainName = asset.chainId === 42161 ? 'Arbitrum' : asset.chainId === 8453 ? 'Base' : asset.chainId === 10132 ? 'Solana' : `Chain ${asset.chainId}`;
-                            return (
-                              <div key={asset.chainId + asset.symbol} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                  <div style={{ width: '24px', height: '24px', background: '#28a0f0', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ color: '#fff', fontSize: '10px', fontWeight: 'bold' }}>{asset.symbol ? asset.symbol[0] : 'T'}</span></div>
-                                  <span style={{ fontSize: '14px', fontWeight: 600, color: t.text }}>{chainName} <span style={{ color: t.subtext, fontWeight: 400 }}>{asset.symbol || 'Token'}</span></span>
-                                </div>
-                                <span style={{ fontSize: '14px', fontWeight: 600, color: t.text }}>${value}</span>
-                              </div>
-                            );
-                          })
-                        )}
-                      </div>
-
-                      <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: `1px solid ${t.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '13px', color: t.subtext }}>Total balance</span>
-                        <span style={{ fontSize: '16px', fontWeight: 700, color: t.text }}>${balance}</span>
-                      </div>
-                    </div>
+                      <UnifiedBalanceCard />
                   </div>
 
                   {/* <div style={{ background: t.surface, border: `1px solid ${isDark ? t.accent + '33' : '#bbf7d0'}`, borderRadius: '20px', padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>

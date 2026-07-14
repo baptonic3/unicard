@@ -7,27 +7,29 @@ const DelegationCard = () => {
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleDelegate = async () => {
-    setError('');
-    setActionLoading(true);
-    try {
-      await ensureDelegated();
-    } catch (err: any) {
-      console.error('Delegation failed:', err);
-      setError(err?.message || 'Delegation failed');
-    } finally {
-      setActionLoading(false);
-    }
+  // Hardcoded Theme matching the dashboard Light mode
+  const t = {
+    surface: '#ffffff',
+    border: '#e2e8f0',
+    text: '#111',
+    subtext: '#64748b',
+    cardShadow: '0 2px 4px rgba(0,0,0,0.02)'
   };
 
-  const handleUndelegate = async () => {
+  const handleToggle = async () => {
+    if (actionLoading) return;
     setError('');
     setActionLoading(true);
+    
     try {
-      await undelegate();
+      if (isDelegated) {
+        await undelegate();
+      } else {
+        await ensureDelegated();
+      }
     } catch (err: any) {
-      console.error('Undelegation failed:', err);
-      setError(err?.message || 'Undelegation failed');
+      console.error('Delegation toggle failed:', err);
+      setError(err?.message || 'Action failed');
     } finally {
       setActionLoading(false);
     }
@@ -35,184 +37,73 @@ const DelegationCard = () => {
 
   if (loading && !accountInfo.ownerAddress) {
     return (
-      <div className="delegation-card glass-card">
-        <div className="skeleton" style={{ height: '140px', borderRadius: '12px' }} />
+      <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: '24px', padding: '24px', boxShadow: t.cardShadow }}>
+        <div style={{ height: '140px', borderRadius: '12px', background: '#f1f5f9', animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} />
       </div>
     );
   }
 
   return (
-    <div className="delegation-card glass-card fade-in">
-      <div className="delegation-header">
-        <h3>
-          <span className="delegation-icon">⚡</span>
-          EIP-7702 Delegation
-        </h3>
-        <span className={`delegation-badge ${isDelegated ? 'active' : 'inactive'}`}>
-          {isDelegated ? '● Active' : '○ Not delegated'}
-        </span>
-      </div>
-
-      <div className="delegation-rows">
-        <div className="delegation-row">
-          <span className="delegation-label">Your EOA</span>
-          <span className="address-truncate">{truncateAddress(accountInfo.ownerAddress)}</span>
-        </div>
-        <div className="delegation-row">
-          <span className="delegation-label">EVM UA</span>
-          <span className="address-truncate">
-            {accountInfo.evmSmartAccount ? truncateAddress(accountInfo.evmSmartAccount) : '—'}
-          </span>
-        </div>
-        <div className="delegation-row">
-          <span className="delegation-label">Solana UA</span>
-          <span className="address-truncate">
-            {accountInfo.solanaSmartAccount ? truncateAddress(accountInfo.solanaSmartAccount) : '—'}
-          </span>
-        </div>
-        <div className="delegation-row">
-          <span className="delegation-label">Chain</span>
-          <span className="delegation-chain">Arbitrum One (42161)</span>
-        </div>
-        <div className="delegation-row">
-          <span className="delegation-label">Mode</span>
-          <span className="delegation-mode">EIP-7702 Inline</span>
-        </div>
-      </div>
-
-      {error && (
-        <div className="delegation-error">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="12" cy="12" r="10" />
-            <line x1="15" y1="9" x2="9" y2="15" />
-            <line x1="9" y1="9" x2="15" y2="15" />
-          </svg>
-          {error}
-        </div>
-      )}
-
-      <div className="delegation-actions">
-        {isDelegated ? (
-          <button
-            className="btn-secondary delegation-btn"
-            onClick={handleUndelegate}
-            disabled={actionLoading}
-          >
-            {actionLoading ? 'Undelegating...' : 'Undelegate'}
-          </button>
-        ) : (
-          <button
-            className="btn-primary delegation-btn"
-            onClick={handleDelegate}
-            disabled={actionLoading}
-          >
+    <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: '24px', padding: '24px', boxShadow: t.cardShadow }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', borderBottom: `1px solid ${t.border}`, paddingBottom: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {actionLoading ? (
-              <span style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
-                <span className="delegation-spinner" />
-                Delegating on Arbitrum...
-              </span>
+               <div style={{ width: '12px', height: '12px', border: '2px solid rgba(0, 229, 153, 0.2)', borderTopColor: '#00e599', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
             ) : (
-              '⚡ Delegate on Arbitrum'
+               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00e599" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
             )}
-          </button>
-        )}
+          </div>
+          <h3 style={{ fontSize: '16px', fontWeight: 700, color: t.text }}>EIP-7702 Delegation</h3>
+        </div>
+        
+        {/* Toggle Switch */}
+        <div 
+          style={{ 
+             display: 'flex', 
+             alignItems: 'center', 
+             gap: '8px', 
+             cursor: actionLoading ? 'not-allowed' : 'pointer', 
+             opacity: actionLoading ? 0.8 : 1,
+             transform: actionLoading ? 'scale(0.96)' : 'scale(1)',
+             transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+          }} 
+          onClick={handleToggle}
+        >
+          <span style={{ fontSize: '13px', fontWeight: 600, color: isDelegated ? '#00e599' : t.subtext, transition: 'color 0.2s' }}>{isDelegated ? 'Delegated' : 'Not Delegated'}</span>
+          <div style={{ width: '40px', height: '24px', background: actionLoading ? '#94a3b8' : (isDelegated ? '#00e599' : '#cbd5e1'), borderRadius: '12px', position: 'relative', transition: 'background 0.3s' }}>
+            <div style={{ width: '20px', height: '20px', background: '#fff', borderRadius: '50%', position: 'absolute', top: '2px', left: isDelegated ? '18px' : '2px', transition: 'left 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+               {actionLoading && (
+                 <div style={{ width: '12px', height: '12px', border: '2px solid rgba(0,0,0,0.1)', borderTopColor: '#64748b', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+               )}
+            </div>
+          </div>
+        </div>
       </div>
-
-      <style jsx>{`
-        .delegation-card {
-          padding: 1.5rem;
-        }
-        .delegation-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 1.25rem;
-        }
-        .delegation-header h3 {
-          font-size: 1rem;
-          font-weight: 600;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-        }
-        .delegation-icon {
-          font-size: 1.25rem;
-        }
-        .delegation-badge {
-          padding: 0.25rem 0.75rem;
-          border-radius: 20px;
-          font-size: 0.75rem;
-          font-weight: 600;
-        }
-        .delegation-badge.active {
-          background: rgba(16, 185, 129, 0.1);
-          color: var(--color-success);
-          border: 1px solid rgba(16, 185, 129, 0.2);
-        }
-        .delegation-badge.inactive {
-          background: rgba(245, 158, 11, 0.1);
-          color: var(--color-warning);
-          border: 1px solid rgba(245, 158, 11, 0.2);
-        }
-        .delegation-rows {
-          display: flex;
-          flex-direction: column;
-          gap: 0;
-        }
-        .delegation-row {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 0.5rem 0;
-          border-bottom: 1px solid var(--glass-border);
-        }
-        .delegation-row:last-child {
-          border-bottom: none;
-        }
-        .delegation-label {
-          color: var(--text-muted);
-          font-size: 0.8125rem;
-          font-weight: 500;
-        }
-        .delegation-chain {
-          font-size: 0.8125rem;
-          color: var(--color-accent-light);
-        }
-        .delegation-mode {
-          font-size: 0.8125rem;
-          color: var(--color-primary-light);
-        }
-        .delegation-error {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 0.625rem 0.875rem;
-          margin-top: 0.75rem;
-          background: rgba(239, 68, 68, 0.1);
-          border: 1px solid rgba(239, 68, 68, 0.2);
-          border-radius: 8px;
-          color: var(--color-error);
-          font-size: 0.75rem;
-        }
-        .delegation-actions {
-          margin-top: 1rem;
-        }
-        .delegation-btn {
-          width: 100%;
-          padding: 12px;
-          font-size: 0.875rem;
-        }
-        .delegation-spinner {
-          width: 16px;
-          height: 16px;
-          border: 2px solid rgba(255, 255, 255, 0.2);
-          border-top-color: white;
-          border-radius: 50%;
-          animation: spin 0.6s linear infinite;
-        }
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
+      
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {[
+          { label: 'Your EOA', value: accountInfo ? truncateAddress(accountInfo.ownerAddress || '') : 'Loading...' },
+          { label: 'EVM UA', value: accountInfo ? truncateAddress(accountInfo.evmSmartAccount) : 'Loading...' },
+          { label: 'Solana UA', value: accountInfo ? truncateAddress(accountInfo.solanaSmartAccount) : 'Loading...' },
+          { label: 'Chain', value: 'Arbitrum • 42161', bold: true },
+          { label: 'Mode', value: 'EIP-7702 Inline', bold: true }
+        ].map((row, i) => (
+          <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '14px', color: t.subtext }}>{row.label}</span>
+            <span style={{ fontSize: '14px', fontWeight: row.bold ? 600 : 500, color: t.text, fontFamily: row.bold ? 'inherit' : 'monospace' }}>{row.value || '—'}</span>
+          </div>
+        ))}
+      </div>
+      
+      {error && (
+         <div style={{ marginTop: '16px', padding: '12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', color: '#ef4444', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span>⚠️</span> {error}
+         </div>
+      )}
+      
+      <style>{`
+         @keyframes spin { 100% { transform: rotate(360deg); } }
       `}</style>
     </div>
   );
