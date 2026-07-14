@@ -171,7 +171,11 @@ export default function LoginPage() {
             {/* Logo */}
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 48 }}>
               <div style={{ width: 36, height: 36, background: 'linear-gradient(135deg,#7c3aed,#06b6d4)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="2"/></svg>
+                <svg width="38" height="38" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M31 0H7C3.13401 0 0 3.13401 0 7V31C0 34.866 3.13401 38 7 38H31C34.866 38 38 34.866 38 31V7C38 3.13401 34.866 0 31 0Z" fill="#00F3AB"/>
+                  <path d="M10 10H15.5806V15.018C15.5806 21.2986 19.9355 22.4964 21.8387 22.4964C24.4452 22.341 27.0323 23.5971 28 24.2446L21.8387 28C13.5484 27.8381 10 21.0719 10 16.3777V10Z" fill="#010101"/>
+                  <path d="M27.9677 10H21.8065V22.5288C26.8129 22.1921 28 18.223 27.9677 16.2806V10Z" fill="#010101"/>
+                </svg>
               </div>
               <span style={{ fontSize: 18, fontWeight: 800, color: '#fff', letterSpacing: '-0.02em' }}>UniCard</span>
             </div>
