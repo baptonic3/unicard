@@ -1,8 +1,9 @@
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, useEffect, useId, FormEvent } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { useMagic } from '@/hooks/MagicProvider';
 import { getUserAddress, saveUserInfo } from '@/utils/common';
+import { EMAIL_ERROR_COPY, validateEmail } from '@/utils/validateEmail';
 import Logo from '@/components/landing/Logo';
 
 const FEATURES = [
@@ -18,6 +19,13 @@ export default function LoginPage() {
   const [loadingProvider, setLoadingProvider] = useState<'email' | 'google' | 'apple' | 'twitter' | 'callback' | null>(null);
   const [error, setError] = useState('');
   const [mounted, setMounted] = useState(false);
+  const [touched, setTouched] = useState(false);
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+  const errorId = useId();
+
+  // Only surface a field error once the visitor has interacted with the
+  // field — either by leaving it (blur) or by trying to submit.
+  const fieldError = touched || submitAttempted ? validateEmail(email) : null;
 
   // ─── CRITICAL: router.query is empty until router.isReady ───
   // Must wait for isReady before reading ?next= param
@@ -89,7 +97,12 @@ export default function LoginPage() {
 
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
-    if (!email || !magic) return;
+    setSubmitAttempted(true);
+    if (validateEmail(email)) return;
+    if (!magic) {
+      setError('Sign-in is unavailable right now. Please try again.');
+      return;
+    }
     try {
       setLoadingProvider('email');
       setError('');
@@ -177,9 +190,9 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <form onSubmit={handleLogin} className="au-field">
+          <form onSubmit={handleLogin} className="au-field" noValidate>
             <label htmlFor="email-input" className="au-label">Email address</label>
-            <div className="au-input">
+            <div className={`au-input${fieldError || error ? ' has-error' : ''}`}>
               <input
                 id="email-input"
                 type="email"
@@ -188,26 +201,32 @@ export default function LoginPage() {
                 placeholder="you@email.com"
                 value={email}
                 disabled={busy}
+                aria-invalid={fieldError || error ? 'true' : 'false'}
+                aria-describedby={fieldError || error ? errorId : undefined}
                 onChange={(e) => {
                   setEmail(e.target.value);
                   setError('');
+                  // Clear a stale "submit attempted" error the moment the
+                  // visitor starts fixing it.
+                  if (submitAttempted) setSubmitAttempted(false);
                 }}
+                onBlur={() => setTouched(true)}
                 autoFocus
               />
             </div>
 
-            {error && (
-              <p className="au-error" role="alert">
+            {(fieldError || error) && (
+              <p className="au-error" id={errorId} role="alert">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                   <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
                   <path d="M12 7.5v5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                   <circle cx="12" cy="16" r="1" fill="currentColor" />
                 </svg>
-                {error}
+                {fieldError ? EMAIL_ERROR_COPY[fieldError] : error}
               </p>
             )}
 
-            <button type="submit" className="au-primary" disabled={busy || !email}>
+            <button type="submit" className="au-primary" disabled={busy}>
               {loadingProvider === 'email' ? (
                 <><span className="au-spinner" aria-hidden="true" /> Sending code…</>
               ) : loadingProvider === 'callback' ? (
@@ -290,6 +309,7 @@ export default function LoginPage() {
           transition: border-color 0.15s ease;
         }
         .au-input:focus-within { border-color: #00f3ab; }
+        .au-input.has-error { border-color: #e5484d; }
         .au-input input {
           width: 100%; border: none; outline: none; background: transparent;
           font-family: inherit; font-size: 15px; color: #0e0e0e;

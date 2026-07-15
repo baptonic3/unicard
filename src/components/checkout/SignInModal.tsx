@@ -1,30 +1,12 @@
 import { useEffect, useId, useState } from 'react';
 import Logo from '../landing/Logo';
+import { EMAIL_ERROR_COPY, validateEmail } from '@/utils/validateEmail';
 
 function formatCountdown(totalSeconds: number): string {
   const m = Math.floor(totalSeconds / 60);
   const s = totalSeconds % 60;
   return `${m}:${String(s).padStart(2, '0')}`;
 }
-
-// Standard-ish email shape check — intentionally permissive (matches the
-// pattern used by most inline-validation references: catch obvious mistakes,
-// don't reject valid-but-unusual addresses).
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-type EmailError = null | 'empty' | 'invalid';
-
-function validateEmail(value: string): EmailError {
-  const trimmed = value.trim();
-  if (!trimmed) return 'empty';
-  if (!EMAIL_RE.test(trimmed)) return 'invalid';
-  return null;
-}
-
-const EMAIL_ERROR_COPY: Record<Exclude<EmailError, null>, string> = {
-  empty: 'Enter your email to continue.',
-  invalid: 'Enter a valid email address.',
-};
 
 interface SignInModalProps {
   /** From the checkout session's item — kept in sync with the purchase page. */
