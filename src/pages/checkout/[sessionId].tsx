@@ -98,6 +98,28 @@ export default function CheckoutPage({ session, item }: CheckoutPageProps) {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    if (!magic) {
+      setOtpError('Sign-in is unavailable right now. Please try again.');
+      return;
+    }
+    // Reuses /login's existing OAuth callback handling — it reads this same
+    // sessionStorage key and redirects back here once Magic completes.
+    sessionStorage.setItem('magic_oauth_next', `/checkout/${session.id}`);
+    try {
+      setOtpSubmitting(true);
+      setOtpError(null);
+      await magic.oauth2.loginWithRedirect({
+        provider: 'google',
+        redirectURI: new URL('/login', window.location.origin).href,
+      });
+    } catch (err) {
+      console.error('Social login init error:', err);
+      setOtpSubmitting(false);
+      setOtpError('Failed to connect to Google.');
+    }
+  };
+
   const handleSuccess = (passId: number, particleTxId?: string, arbTxHash?: string) => {
     setPurchaseResult({ passId, arbTxHash: arbTxHash || '', particleTxId: particleTxId || '' });
   };
@@ -118,6 +140,7 @@ export default function CheckoutPage({ session, item }: CheckoutPageProps) {
           expired={session.status !== 'open'}
           eventUrl={session.cancelUrl}
           onSubmit={handleEmailSignIn}
+          onGoogleSignIn={handleGoogleSignIn}
           submitting={otpSubmitting}
           submitError={otpError}
         />
