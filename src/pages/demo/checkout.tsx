@@ -72,7 +72,7 @@ export default function DemoCheckoutPage() {
               {/* Left Column — Order Summary (360px) */}
               <div style={{ width: 360, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 20 }}>
                 {/* Image */}
-                <div style={{ width: 360, height: 360, borderRadius: 24, background: '#e2e8f0', backgroundImage: 'url(https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&q=80)', backgroundSize: 'cover', backgroundPosition: 'center', border: '1px solid rgba(255,255,255,0.16)', boxShadow: '0 1px 4px rgba(0,0,0,0.1)' }}></div>
+                <div style={{ width: 360, height: 360, borderRadius: 24, background: '#e2e8f0', backgroundImage: 'url(https://i.postimg.cc/TPvzWpB8/event.png)', backgroundSize: 'cover', backgroundPosition: 'center', border: '1px solid rgba(255,255,255,0.16)', boxShadow: '0 1px 4px rgba(0,0,0,0.1)' }}></div>
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   <div style={{ fontSize: 20, fontWeight: 500, color: '#210032' }}>Onchain Rooftop — Builders' Mixer</div>
@@ -87,10 +87,10 @@ export default function DemoCheckoutPage() {
                     <span style={{ color: 'rgba(20,20,20,0.64)' }}>Standard Ticket × 1</span>
                     <span style={{ color: '#210032' }}>$5.00</span>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  {/* <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ color: 'rgba(20,20,20,0.64)' }}>Fees</span>
                     <span style={{ color: '#210032' }}>$0.00</span>
-                  </div>
+                  </div> */}
                   <div style={{ height: 1, background: 'rgba(33,0,50,0.08)', margin: '4px 0' }}></div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16, fontWeight: 500 }}>
                     <span style={{ color: '#210032' }}>Total</span>
@@ -115,15 +115,15 @@ export default function DemoCheckoutPage() {
                     Welcome! To join the event, please get your ticket below.
                   </div>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {/* <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <label style={{ fontSize: 13, fontWeight: 500, color: 'rgba(20,20,20,0.64)' }}>Name</label>
                     <input placeholder="Your full name" style={{ padding: '0 14px', height: 42, borderRadius: 12, border: '1px solid rgba(33,0,50,0.1)', background: 'rgba(255,255,255,0.8)', fontSize: 15, outline: 'none' }} />
-                  </div>
+                  </div> */}
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {/* <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <label style={{ fontSize: 13, fontWeight: 500, color: 'rgba(20,20,20,0.64)' }}>Email</label>
                     <input placeholder="you@example.com" type="email" style={{ padding: '0 14px', height: 42, borderRadius: 12, border: '1px solid rgba(33,0,50,0.1)', background: 'rgba(255,255,255,0.8)', fontSize: 15, outline: 'none' }} />
-                  </div>
+                  </div> */}
 
                   <button style={{ height: 44, background: '#636363', color: '#fff', borderRadius: 16, fontWeight: 500, fontSize: 16, border: 'none', cursor: 'pointer' }}>
                     Get Ticket · $5.00
@@ -154,7 +154,7 @@ export default function DemoCheckoutPage() {
                       </div>
                     )}
                     <span style={{ fontSize: 16, fontWeight: 500, color: '#210032' }}>
-                      {isProcessing ? 'Pay with crypto' : 'Pay with crypto'}
+                      {isProcessing ? 'Generating Session...' : 'Pay with crypto'}
                     </span>
                   </button>
 

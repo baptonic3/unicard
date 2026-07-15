@@ -11,6 +11,7 @@ import BuyPassButton from '@/components/BuyPassButton';
 import PassCard from '@/components/PassCard';
 import Header from '@/components/Header';
 import { AccessItemData } from '@/components/AccessCard';
+import UnifiedBalanceCard from '@/components/UnifiedBalanceCard';
 
 interface CheckoutPageProps {
   session: {
@@ -44,12 +45,7 @@ const LIGHT = {
   navBorder: '#e2e8f0', navBg: '#fff', activeTab: '#111',
   cardShadow: '0 2px 4px rgba(0,0,0,0.02)',
 };
-const DARK = {
-  bg: '#0f0f14', surface: '#1a1a24', border: 'rgba(255,255,255,0.08)', text: '#f0f0f5',
-  subtext: '#8892a4', muted: '#333344', accent: '#00e599',
-  navBorder: 'rgba(255,255,255,0.07)', navBg: '#15151f', activeTab: '#fff',
-  cardShadow: '0 2px 12px rgba(0,0,0,0.4)',
-};
+
 
 export default function CheckoutPage({ session, item }: CheckoutPageProps) {
   const router = useRouter();
@@ -60,13 +56,13 @@ export default function CheckoutPage({ session, item }: CheckoutPageProps) {
   const solanaSmartAccount = accountInfo?.solanaSmartAccount || '';
   const primaryBalance = Number(primaryAssets?.totalAmountInUSD ?? 0).toFixed(2);
   const [mounted, setMounted] = useState(false);
-  const [isDark, setIsDark] = useState(false);
   const [purchaseResult, setPurchaseResult] = useState<{
     passId: number; arbTxHash: string; particleTxId: string;
   } | null>(null);
 
   const { display: timerDisplay, expired: sessionExpired } = useCountdown(session.expiresAt);
-  const t = isDark ? DARK : LIGHT;
+  const hasEnough = Number(primaryAssets?.totalAmountInUSD ?? 0) >= item.priceUSDC;
+  const t = LIGHT;
 
   useEffect(() => {
     setMounted(true);
@@ -207,18 +203,17 @@ export default function CheckoutPage({ session, item }: CheckoutPageProps) {
             <h1 style={{ fontSize: 28, fontWeight: 700, letterSpacing: '-0.02em', marginBottom: 4, color: t.text }}>Welcome back</h1>
             <p style={{ color: t.subtext, fontSize: 14 }}>
               Your EOA&nbsp;
-              <span style={{ fontFamily: 'monospace', fontWeight: 600, color: isDark ? '#a5b4fc' : '#334155' }}>
+              <span style={{ fontFamily: 'monospace', fontWeight: 600, color: '#334155' }}>
                 {address ? truncateAddress(address) : '—'}
               </span>
             </p>
           </div>
 
-          {/* ── STICKY Pending Payment Block ── */}
+          {/* ── Pending Payment Block ── */}
           <div style={{
-            position: 'sticky', top: 24, zIndex: 100,
             background: t.surface, border: `1px solid ${t.border}`,
             borderRadius: 20, padding: '24px',
-            boxShadow: isDark ? '0 8px 40px rgba(0,0,0,0.5)' : '0 4px 24px rgba(0,0,0,0.08)',
+            boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
             marginBottom: 32,
             transition: 'background 0.25s, border-color 0.25s',
           }}>
@@ -268,8 +263,18 @@ export default function CheckoutPage({ session, item }: CheckoutPageProps) {
               </div>
             </div>
 
+            {/* Insufficient Balance Notice */}
+            {!hasEnough && !sessionExpired && (
+              <div style={{ marginTop: 20, color: '#b45309', fontSize: 13, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path fill-rule="evenodd" clip-rule="evenodd" d="M8.00004 2L1.33337 13.3333H14.6667L8.00004 2ZM7.33337 6H8.66671V10H7.33337V6ZM7.33337 11.3333H8.66671V12.6667H7.33337V11.3333Z" fill="#9A5410"/>
+                </svg>
+                Insufficient balance — add ${item.priceUSDC.toFixed(2)} to your balance to pay
+              </div>
+            )}
+
             {/* Action buttons */}
-            <div style={{ display: 'flex', gap: 12, marginTop: 20 }}>
+            <div style={{ display: 'flex', gap: 12, marginTop: !hasEnough && !sessionExpired ? 12 : 20 }}>
               <a
                 href={session.cancelUrl}
                 style={{
@@ -319,40 +324,8 @@ export default function CheckoutPage({ session, item }: CheckoutPageProps) {
               </svg>
             </div>
 
-            {/* EIP-7702 Delegation card */}
-            <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: 20, padding: 24, boxShadow: t.cardShadow }}>
-              {/* Card header */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, borderBottom: `1px solid ${t.border}`, paddingBottom: 14 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00e599" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                  </div>
-                  <h3 style={{ fontSize: 15, fontWeight: 700, color: t.text }}>EIP-7702 Delegation</h3>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: '#00e599' }}>{isDelegated ? 'Active' : 'Unsigned'}</span>
-                  <div style={{ width: 36, height: 20, background: isDelegated ? '#00e599' : '#cbd5e1', borderRadius: 10, position: 'relative' }}>
-                    <div style={{ width: 16, height: 16, background: '#fff', borderRadius: '50%', position: 'absolute', top: 2, left: isDelegated ? 18 : 2, transition: 'left 0.2s' }} />
-                  </div>
-                </div>
-              </div>
-
-              {/* Rows */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {[
-                  { label: 'Your EOA', value: address ? truncateAddress(address) : '—' },
-                  { label: 'EVM UA', value: evmSmartAccount ? truncateAddress(evmSmartAccount) : 'Loading…' },
-                  { label: 'Solana UA', value: solanaSmartAccount ? truncateAddress(solanaSmartAccount) : 'Loading…' },
-                  { label: 'Chain', value: 'Arbitrum · 42161', bold: true },
-                  { label: 'Mode', value: 'EIP-7702 Inline', bold: true },
-                ].map(row => (
-                  <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: 13, color: t.subtext }}>{row.label}</span>
-                    <span style={{ fontSize: 13, fontWeight: row.bold ? 600 : 500, color: t.text, fontFamily: row.bold ? 'inherit' : 'monospace' }}>{row.value}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            {/* UnifiedBalanceCard overriding EIP-7702 Delegation */}
+            <UnifiedBalanceCard />
           </div>
         </main>
       </div>

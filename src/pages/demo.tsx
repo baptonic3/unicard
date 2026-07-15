@@ -31,7 +31,7 @@ export default function DemoEventPage() {
           {/* LEFT COLUMN — Presenter Info */}
           <div style={{ width: 330, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 24 }}>
             {/* Cover Image Placeholder */}
-            <div style={{ width: '100%', height: 330, borderRadius: 24, background: '#e2e8f0', backgroundImage: 'url(https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&q=80)', backgroundSize: 'cover', backgroundPosition: 'center', border: '1px solid rgba(20,20,20,0.04)' }}></div>
+            <div style={{ width: '100%', height: 330, borderRadius: 24, background: '#e2e8f0', backgroundImage: 'url(https://i.postimg.cc/TPvzWpB8/event.png)', backgroundSize: 'cover', backgroundPosition: 'center', border: '1px solid rgba(20,20,20,0.04)' }}></div>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

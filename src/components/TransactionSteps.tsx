@@ -75,16 +75,10 @@ export default function TransactionSteps({ step, errorMsg, onCancel }: Transacti
             </div>
           ) : (
             <div className="tx-spinner">
-              <svg width="36" height="36" viewBox="0 0 36 36">
-                <circle cx="18" cy="18" r="15" fill="none" stroke="rgba(124,58,237,0.15)" strokeWidth="3" />
-                <circle cx="18" cy="18" r="15" fill="none" stroke="url(#grad-spin)" strokeWidth="3"
-                  strokeLinecap="round" strokeDasharray="60 35" />
-                <defs>
-                  <linearGradient id="grad-spin" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#7c3aed" />
-                    <stop offset="100%" stopColor="#06b6d4" />
-                  </linearGradient>
-                </defs>
+              <svg width="44" height="44" viewBox="0 0 44 44">
+                <circle cx="22" cy="22" r="18" fill="none" stroke="#f1f5f9" strokeWidth="4" />
+                <circle cx="22" cy="22" r="18" fill="none" stroke="#00e599" strokeWidth="4"
+                  strokeLinecap="round" strokeDasharray="70 40" className="spin-circle" />
               </svg>
             </div>
           )}
@@ -155,8 +149,8 @@ export default function TransactionSteps({ step, errorMsg, onCancel }: Transacti
         .tx-overlay {
           position: fixed;
           inset: 0;
-          background: rgba(0, 0, 0, 0.72);
-          backdrop-filter: blur(6px);
+          background: rgba(255, 255, 255, 0.85);
+          backdrop-filter: blur(4px);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -168,6 +162,10 @@ export default function TransactionSteps({ step, errorMsg, onCancel }: Transacti
           width: 100%;
           max-width: 420px;
           padding: 2rem;
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
+          border-radius: 20px;
+          box-shadow: 0 12px 40px rgba(0,0,0,0.08);
           overflow: hidden;
           outline: none;
         }
@@ -183,9 +181,9 @@ export default function TransactionSteps({ step, errorMsg, onCancel }: Transacti
           pointer-events: none;
           transition: background 0.5s;
         }
-        .orb-active { background: radial-gradient(circle, rgba(124,58,237,0.25) 0%, transparent 70%); }
-        .orb-done   { background: radial-gradient(circle, rgba(16,185,129,0.25) 0%, transparent 70%); animation: orb-pulse 2s infinite; }
-        .orb-error  { background: radial-gradient(circle, rgba(239,68,68,0.2) 0%, transparent 70%); }
+        .orb-active { background: radial-gradient(circle, rgba(0,229,153,0.12) 0%, transparent 60%); }
+        .orb-done   { background: radial-gradient(circle, rgba(16,185,129,0.18) 0%, transparent 60%); animation: orb-pulse 2s infinite; }
+        .orb-error  { background: radial-gradient(circle, rgba(239,68,68,0.1) 0%, transparent 60%); }
         @keyframes orb-pulse {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.5; }
@@ -200,18 +198,24 @@ export default function TransactionSteps({ step, errorMsg, onCancel }: Transacti
         }
         .tx-spinner {
           margin-bottom: 1rem;
-          animation: spin 1.2s linear infinite;
+          display: flex;
+          justify-content: center;
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        .spin-circle {
+          transform-origin: 50% 50%;
+          animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
         .tx-success-icon, .tx-error-icon { margin-bottom: 1rem; }
         .tx-title {
           font-size: 1.125rem;
           font-weight: 800;
+          color: #111;
           margin-bottom: 0.375rem;
         }
         .tx-subtitle {
           font-size: 0.8125rem;
-          color: var(--text-secondary);
+          color: #64748b;
           line-height: 1.5;
         }
         /* Steps */
@@ -242,19 +246,19 @@ export default function TransactionSteps({ step, errorMsg, onCancel }: Transacti
           width: 10px;
           height: 10px;
           border-radius: 50%;
-          background: var(--color-primary);
-          box-shadow: 0 0 8px var(--color-primary);
+          background: #00e599;
+          box-shadow: 0 0 8px rgba(0,229,153,0.6);
           animation: pulse-glow 1.2s ease-in-out infinite;
         }
         .step-dot-idle {
           width: 8px;
           height: 8px;
           border-radius: 50%;
-          background: var(--glass-border);
+          background: #e2e8f0;
         }
         @keyframes pulse-glow {
-          0%, 100% { box-shadow: 0 0 4px var(--color-primary); }
-          50% { box-shadow: 0 0 14px var(--color-primary); }
+          0%, 100% { box-shadow: 0 0 4px rgba(0,229,153,0.4); }
+          50% { box-shadow: 0 0 12px rgba(0,229,153,0.8); }
         }
         .step-text {
           display: flex;
@@ -268,13 +272,13 @@ export default function TransactionSteps({ step, errorMsg, onCancel }: Transacti
         }
         .step-sub {
           font-size: 0.75rem;
-          color: var(--text-secondary);
+          color: #64748b;
           animation: fade-in 0.3s ease;
         }
         @keyframes fade-in { from { opacity: 0; transform: translateY(2px); } }
-        .step-current .step-label { color: var(--text-primary); }
-        .step-done    .step-label { color: var(--color-success); }
-        .step-pending .step-label { color: var(--text-muted); }
+        .step-current .step-label { color: #111; }
+        .step-done    .step-label { color: #10b981; }
+        .step-pending .step-label { color: #94a3b8; }
         .step-connector {
           position: absolute;
           left: 10px;
@@ -283,8 +287,8 @@ export default function TransactionSteps({ step, errorMsg, onCancel }: Transacti
           width: 2px;
           border-radius: 1px;
         }
-        .connector-done { background: var(--color-success); }
-        .connector-idle { background: var(--glass-border); }
+        .connector-done { background: #10b981; }
+        .connector-idle { background: #e2e8f0; }
         /* Actions */
         .tx-actions {
           display: flex;
@@ -293,17 +297,18 @@ export default function TransactionSteps({ step, errorMsg, onCancel }: Transacti
         }
         .tx-cancel-btn {
           font-size: 0.875rem;
-          padding: 0.5rem 1.5rem;
+          padding: 0.625rem 1.5rem;
           border-radius: 10px;
-          border: 1px solid var(--glass-border);
-          background: transparent;
-          color: var(--text-secondary);
+          border: 1px solid #e2e8f0;
+          background: #f8fafc;
+          color: #64748b;
+          font-weight: 600;
           cursor: pointer;
           transition: background 0.2s, color 0.2s;
         }
         .tx-cancel-btn:hover {
-          background: rgba(255,255,255,0.05);
-          color: var(--text-primary);
+          background: #f1f5f9;
+          color: #111;
         }
       `}</style>
     </div>

@@ -9,7 +9,6 @@ const ERC20_TRANSFER_IFACE = new Interface([
   'function transfer(address to, uint256 amount) returns (bool)',
 ]);
 import TransactionSteps, { TxStep } from '@/components/TransactionSteps';
-import TopUpPrompt from '@/components/TopUpPrompt';
 import { AccessItemData } from '@/components/AccessCard';
 
 interface BuyPassButtonProps {
@@ -41,12 +40,38 @@ export default function BuyPassButton({
   const [txStep, setTxStep] = useState<TxStep>('idle');
   const [errorMsg, setErrorMsg] = useState<string>('');
   const [result, setResult] = useState<PurchaseResult | null>(null);
-  const [showTopUp, setShowTopUp] = useState(false);
 
   const hasEnough = balance >= item.priceUSDC;
   const treasuryWallet = process.env.NEXT_PUBLIC_TREASURY_WALLET;
 
-  const handleBuy = async () => {
+  const simulatePurchase = async () => {
+    setTxStep('building');
+    await new Promise(r => setTimeout(r, 1000));
+    setTxStep('signing');
+    await new Promise(r => setTimeout(r, 1000));
+    setTxStep('routing');
+    await new Promise(r => setTimeout(r, 1500));
+    setTxStep('confirming');
+    await new Promise(r => setTimeout(r, 1000));
+    setTxStep('issuing');
+    await new Promise(r => setTimeout(r, 1000));
+
+    const mockResult: PurchaseResult = {
+      passId: 999,
+      particleTxId: 'mock-particle-tx-id',
+      arbTxHash: '0xmock-arb-tx-hash-0000',
+    };
+    setResult(mockResult);
+    setTxStep('done');
+    onSuccess?.(mockResult.passId, mockResult.particleTxId, mockResult.arbTxHash);
+  };
+
+  const handleBuy = async (e?: React.MouseEvent) => {
+    if (e && e.altKey) {
+      e.preventDefault();
+      return simulatePurchase();
+    }
+
     if (!universalAccount || !treasuryWallet) {
       setErrorMsg('Wallet or treasury not configured.');
       setTxStep('error');
@@ -228,29 +253,21 @@ export default function BuyPassButton({
   // ── Render ──
   if (!hasEnough) {
     return (
-      <div className="buy-section">
-        <button
-          className="btn-primary buy-btn buy-btn-disabled"
-          onClick={() => setShowTopUp(!showTopUp)}
-          id="buy-pass-btn"
-        >
-          💳 Insufficient balance — top up
-        </button>
-
-        {showTopUp && (
-          <TopUpPrompt
-            needed={item.priceUSDC}
-            current={balance}
-            depositAddress={depositAddress}
-          />
-        )}
-
-        <style jsx>{`
-          .buy-section { display: flex; flex-direction: column; gap: 0.75rem; }
-          .buy-btn { width: 100%; padding: 14px; font-size: 1rem; border-radius: 14px; }
-          .buy-btn-disabled { background: var(--glass-bg) !important; opacity: 0.7; }
-        `}</style>
-      </div>
+      <button
+        className="buy-btn"
+        disabled
+        style={{
+          background: '#f1f5f9', color: '#94a3b8', cursor: 'not-allowed', 
+          border: 'none', padding: '14px', width: '100%', borderRadius: '12px',
+          display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px',
+          fontSize: '15px', fontWeight: 600
+        }}
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4.66665 6.66667V5.33333C4.66665 4.44928 5.01784 3.60143 5.64296 2.97631C6.26808 2.35119 7.11592 2 7.99998 2C8.88403 2 9.73188 2.35119 10.357 2.97631C10.9821 3.60143 11.3333 4.44928 11.3333 5.33333V6.66667H12C12.1768 6.66667 12.3464 6.7369 12.4714 6.86193C12.5964 6.98695 12.6666 7.15652 12.6666 7.33333V13.3333C12.6666 13.5101 12.5964 13.6797 12.4714 13.8047C12.3464 13.9298 12.1768 14 12 14H3.99998C3.82317 14 3.6536 13.9298 3.52858 13.8047C3.40355 13.6797 3.33331 13.5101 3.33331 13.3333V7.33333C3.33331 7.15652 3.40355 6.98695 3.52858 6.86193C3.6536 6.7369 3.82317 6.66667 3.99998 6.66667H4.66665ZM5.99998 6.66667H9.99998V5.33333C9.99998 4.8029 9.78927 4.29419 9.41419 3.91912C9.03912 3.54405 8.53041 3.33333 7.99998 3.33333C7.46955 3.33333 6.96084 3.54405 6.58577 3.91912C6.21069 4.29419 5.99998 4.8029 5.99998 5.33333V6.66667Z" fill="#71717A"/>
+        </svg>
+        Pay ${item.priceUSDC.toFixed(2)} →
+      </button>
     );
   }
 
@@ -314,6 +331,10 @@ export default function BuyPassButton({
           Processing…
         </button>
       )}
+
+      {/* <p className="gas-note" style={{ marginTop: 12, color: '#64748b', fontSize: '11px', textAlign: 'center' }}>
+        💡 <strong>Testing Mode:</strong> Hold <code>Alt</code> (or <code>Option</code>) while clicking Pay to simulate the UI state without sending funds.
+      </p> */}
 
       {/* <p className="gas-note">Gas included. Cross-chain routing automatic.</p>  not gasless user pays gas for cross chain txn via partical universal sdk - todo: need to update this note (take care of this by including gas + pass price in the priceUSDC) */}
 
