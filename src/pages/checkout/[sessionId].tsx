@@ -6,10 +6,12 @@ import { useRouter } from 'next/router';
 import { db } from '@/lib/db';
 import { useUniversalAccount } from '@/hooks/UniversalAccountProvider';
 import { useMagic } from '@/hooks/MagicProvider';
-import { getUserAddress, truncateAddress } from '@/utils/common';
+import { getUserAddress, saveUserInfo, truncateAddress } from '@/utils/common';
 import BuyPassButton from '@/components/BuyPassButton';
 import PassCard from '@/components/PassCard';
 import Header from '@/components/Header';
+import SignInModal from '@/components/checkout/SignInModal';
+import SignInScreen from '@/components/checkout/SignInScreen';
 import { AccessItemData } from '@/components/AccessCard';
 import UnifiedBalanceCard from '@/components/UnifiedBalanceCard';
 
@@ -49,7 +51,7 @@ const LIGHT = {
 
 export default function CheckoutPage({ session, item }: CheckoutPageProps) {
   const router = useRouter();
-  const { token, setToken } = useMagic();
+  const { magic, token, setToken } = useMagic();
   const { accountInfo, primaryAssets, isDelegated } = useUniversalAccount();
   const address = accountInfo?.ownerAddress || '';
   const evmSmartAccount = accountInfo?.evmSmartAccount || '';
@@ -64,24 +66,64 @@ export default function CheckoutPage({ session, item }: CheckoutPageProps) {
   const hasEnough = Number(primaryAssets?.totalAmountInUSD ?? 0) >= item.priceUSDC;
   const t = LIGHT;
 
+  // Inline sign-in (Magic email OTP) shown as a modal over the checkout.
+  const [otpSubmitting, setOtpSubmitting] = useState(false);
+  const [otpError, setOtpError] = useState<string | null>(null);
+
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Redirect to login if unauthenticated
-  useEffect(() => {
-    if (!mounted) return;
-    const addr = getUserAddress();
-    if (!token && !addr) {
-      router.replace(`/login?next=/checkout/${session.id}`);
+  const loggedOut = mounted && !token && !getUserAddress();
+
+  const handleEmailSignIn = async (submittedEmail: string) => {
+    if (!magic) {
+      setOtpError('Sign-in is unavailable right now. Please try again.');
+      return;
     }
-  }, [mounted, token]);
+    try {
+      setOtpSubmitting(true);
+      setOtpError(null);
+      const didToken = await magic.auth.loginWithEmailOTP({ email: submittedEmail });
+      const metadata = await magic.user.getInfo();
+      const publicAddress = metadata?.wallets?.ethereum?.publicAddress;
+      if (!didToken || !publicAddress) throw new Error('Login failed');
+      saveUserInfo(didToken, 'EMAIL', publicAddress);
+      setToken(didToken); // re-renders into the authenticated checkout
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : '';
+      if (!msg.includes('canceled')) setOtpError('Sign-in failed. Please try again.');
+    } finally {
+      setOtpSubmitting(false);
+    }
+  };
 
   const handleSuccess = (passId: number, particleTxId?: string, arbTxHash?: string) => {
     setPurchaseResult({ passId, arbTxHash: arbTxHash || '', particleTxId: particleTxId || '' });
   };
 
   if (!mounted) return null;
+
+  // ── Logged out: sign-in-to-purchase modal over a dimmed wallet ──
+  // The modal handles both the live countdown and the expired state itself.
+  if (loggedOut) {
+    return (
+      <SignInScreen>
+        <SignInModal
+          itemTitle={item.title}
+          itemDescription={item.description}
+          total={`$${item.priceUSDC.toFixed(2)}`}
+          thumbnailSrc={item.imageUrl ?? undefined}
+          expiresAt={new Date(session.expiresAt).getTime()}
+          expired={session.status !== 'open'}
+          eventUrl={session.cancelUrl}
+          onSubmit={handleEmailSignIn}
+          submitting={otpSubmitting}
+          submitError={otpError}
+        />
+      </SignInScreen>
+    );
+  }
 
   // ── Session not open (complete / expired) ──
   if (session.status !== 'open') {
@@ -343,8 +385,10 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
 
   if (!session) return { notFound: true };
 
-  if (session.status === 'open' && new Date() > session.expiresAt) {
+  let status = session.status;
+  if (status === 'open' && new Date() > session.expiresAt) {
     await db.checkoutSession.update({ where: { id: sessionId }, data: { status: 'expired' } });
+    status = 'expired';
   }
 
   const item: AccessItemData = {
@@ -358,16 +402,19 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
     active: session.item.active,
   };
 
+  // JSON round-trip strips `undefined` values, which Next.js cannot serialize.
   return {
-    props: {
-      session: {
-        id: session.id,
-        successUrl: session.successUrl,
-        cancelUrl: session.cancelUrl,
-        status: session.status,
-        expiresAt: session.expiresAt.toISOString(),
-      },
-      item,
-    },
+    props: JSON.parse(
+      JSON.stringify({
+        session: {
+          id: session.id,
+          successUrl: session.successUrl,
+          cancelUrl: session.cancelUrl,
+          status,
+          expiresAt: session.expiresAt.toISOString(),
+        },
+        item,
+      })
+    ),
   };
 };

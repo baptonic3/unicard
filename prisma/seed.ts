@@ -10,6 +10,15 @@ async function main() {
   // Seed access items
   const items = [
     {
+      slug: 'onchain-rooftop-mixer',
+      title: "Onchain Rooftop — Builders' Mixer",
+      description: 'Wed, Jul 22 · 5:00–9:00 PM · StartDock Coworking, Amsterdam',
+      imageUrl: 'https://images.unsplash.com/photo-1543269865-cbf427effbad?w=800&auto=format&fit=crop',
+      priceUSDC: 5,
+      chainItemId: null,
+      active: true,
+    },
+    {
       slug: 'unicard-launch-party',
       title: 'UniCard Launch Party',
       description:

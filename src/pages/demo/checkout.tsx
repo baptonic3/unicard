@@ -12,7 +12,7 @@ export default function DemoCheckoutPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          itemSlug: 'arbitrum-hackathon-uxmaxx', // Note: will change this later 
+          itemSlug: 'onchain-rooftop-mixer',
           successUrl: `${window.location.origin}/demo?success=true`,
           cancelUrl: `${window.location.origin}/demo/checkout`,
         }),
@@ -21,8 +21,8 @@ export default function DemoCheckoutPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to create session');
 
-      // Redirect user to login, passing the checkout session as the next step
-      window.location.href = `/login?next=${encodeURIComponent('/checkout/' + data.sessionId)}`;
+      // Go straight to checkout — sign-in now happens inline on that screen.
+      window.location.href = `/checkout/${data.sessionId}`;
 
     } catch (error) {
       console.error(error);

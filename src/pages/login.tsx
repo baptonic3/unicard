@@ -3,12 +3,19 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { useMagic } from '@/hooks/MagicProvider';
 import { getUserAddress, saveUserInfo } from '@/utils/common';
+import Logo from '@/components/landing/Logo';
+
+const FEATURES = [
+  { title: 'Magic Email Login', sub: 'No seed phrase, no extension needed' },
+  { title: 'Cross-chain payments', sub: 'Pay with USDC on any chain' },
+  { title: 'EIP-7702 Smart Account', sub: 'Full smart account, standard EOA' },
+];
 
 export default function LoginPage() {
   const router = useRouter();
   const { magic, token, setToken } = useMagic();
   const [email, setEmail] = useState('');
-  const [loadingProvider, setLoadingProvider] = useState<'email'|'google'|'apple'|'twitter'|'callback'|null>(null);
+  const [loadingProvider, setLoadingProvider] = useState<'email' | 'google' | 'apple' | 'twitter' | 'callback' | null>(null);
   const [error, setError] = useState('');
   const [mounted, setMounted] = useState(false);
 
@@ -29,7 +36,7 @@ export default function LoginPage() {
   // Auto-redirect if already logged in — wait for router.isReady first
   useEffect(() => {
     if (!mounted || !router.isReady) return;
-    
+
     // Check if we're returning from an OAuth redirect first
     const search = window.location.search;
     if (search.includes('magic_credential=') || search.includes('state=')) {
@@ -51,7 +58,7 @@ export default function LoginPage() {
           setLoadingProvider('callback');
           const result = await magic.oauth2.getRedirectResult();
           const didToken = result.magic.idToken;
-          
+
           // In Magic SDK v33+, get public address via getInfo() or fallback to the metadata cast
           let publicAddress = (result.magic.userMetadata as any).publicAddress;
           try {
@@ -60,7 +67,7 @@ export default function LoginPage() {
           } catch (e) {
             // ignore
           }
-          
+
           if (didToken && publicAddress) {
             setToken(didToken);
             saveUserInfo(didToken, result.oauth.provider.toUpperCase(), publicAddress);
@@ -118,204 +125,236 @@ export default function LoginPage() {
     }
   };
 
-  const SocialButton = ({ provider, icon, label }: { provider: 'google'|'apple'|'twitter', icon: React.ReactNode, label: string }) => {
-    const isThisLoading = loadingProvider === provider;
-    return (
-      <button
-        type="button"
-        onClick={() => handleSocialLogin(provider)}
-        disabled={!!loadingProvider}
-        style={{
-          flex: 1, padding: '12px', background: '#fff',
-          border: '1px solid #e2e8f0', borderRadius: 12,
-          cursor: loadingProvider ? 'not-allowed' : 'pointer',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-          fontSize: 14, fontWeight: 600, color: '#334155',
-          transition: 'all 0.2s',
-          opacity: loadingProvider ? 0.6 : 1
-        }}
-        onMouseOver={(e) => loadingProvider ? null : (e.currentTarget.style.border = '1px solid #cbd5e1', e.currentTarget.style.background = '#f8fafc')}
-        onMouseOut={(e) => loadingProvider ? null : (e.currentTarget.style.border = '1px solid #e2e8f0', e.currentTarget.style.background = '#fff')}
-      >
-        {isThisLoading ? (
-            <span style={{ width: 16, height: 16, border: '2px solid rgba(0,0,0,0.1)', borderTop: '2px solid #334155', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />
-        ) : icon} 
-        {label}
-      </button>
-    );
-  };
+  const busy = !!loadingProvider;
 
   return (
     <>
       <Head>
         <title>Sign in | UniCard</title>
         <meta name="description" content="Sign in to UniCard — your universal crypto wallet." />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
       </Head>
 
-      <div style={{
-        minHeight: '100vh', display: 'flex', fontFamily: 'Inter, sans-serif',
-        background: '#fff', color: '#111',
-      }}>
-        {/* ── Left: Branding ── */}
-        <div style={{
-          flex: '0 0 480px', background: 'linear-gradient(160deg, #0f0a1e 0%, #111827 100%)',
-          display: 'flex', flexDirection: 'column', justifyContent: 'center',
-          padding: '64px 56px', position: 'relative', overflow: 'hidden',
-        }}>
-          {/* Background glow */}
-          <div style={{ position: 'absolute', top: -80, left: -80, width: 360, height: 360, borderRadius: '50%', background: 'rgba(124,58,237,0.18)', filter: 'blur(90px)', pointerEvents: 'none' }} />
-          <div style={{ position: 'absolute', bottom: -40, right: -40, width: 240, height: 240, borderRadius: '50%', background: 'rgba(6,182,212,0.12)', filter: 'blur(70px)', pointerEvents: 'none' }} />
+      <div className="au">
+        <a href="/" className="au-logo" aria-label="UniCard home">
+          <Logo height={32} />
+        </a>
 
-          <div style={{ position: 'relative', zIndex: 1 }}>
-            {/* Logo */}
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 48 }}>
-              <div style={{ width: 36, height: 36, background: 'linear-gradient(135deg,#7c3aed,#06b6d4)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="38" height="38" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M31 0H7C3.13401 0 0 3.13401 0 7V31C0 34.866 3.13401 38 7 38H31C34.866 38 38 34.866 38 31V7C38 3.13401 34.866 0 31 0Z" fill="#00F3AB"/>
-                  <path d="M10 10H15.5806V15.018C15.5806 21.2986 19.9355 22.4964 21.8387 22.4964C24.4452 22.341 27.0323 23.5971 28 24.2446L21.8387 28C13.5484 27.8381 10 21.0719 10 16.3777V10Z" fill="#010101"/>
-                  <path d="M27.9677 10H21.8065V22.5288C26.8129 22.1921 28 18.223 27.9677 16.2806V10Z" fill="#010101"/>
-                </svg>
-              </div>
-              <span style={{ fontSize: 18, fontWeight: 800, color: '#fff', letterSpacing: '-0.02em' }}>UniCard</span>
-            </div>
-
-            <h1 style={{ fontSize: 36, fontWeight: 800, color: '#fff', lineHeight: 1.2, marginBottom: 16, letterSpacing: '-0.03em' }}>
-              Your Universal<br />Crypto Wallet
-            </h1>
-            <p style={{ color: '#94a3b8', fontSize: 15, lineHeight: 1.7, marginBottom: 48 }}>
-              Pay for anything with any token — UniCard handles cross-chain routing automatically.
-            </p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-              {[
-                { icon: '⚡', label: 'Magic Email Login', sub: 'No seed phrase, no extension needed' },
-                { icon: '🌐', label: 'Cross-chain payments', sub: 'Pay with USDC on any chain' },
-                { icon: '🔒', label: 'EIP-7702 Smart Account', sub: 'Full smart account, standard EOA' },
-              ].map(f => (
-                <div key={f.label} style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-                  <div style={{ fontSize: 22, lineHeight: 1, width: 32, flexShrink: 0, paddingTop: 1 }}>{f.icon}</div>
-                  <div>
-                    <div style={{ fontWeight: 600, fontSize: 14, color: '#f1f5f9' }}>{f.label}</div>
-                    <div style={{ fontSize: 13, color: '#64748b', marginTop: 2 }}>{f.sub}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div style={{ position: 'absolute', bottom: 28, left: 56, display: 'flex', gap: 6, alignItems: 'center' }}>
-            <span style={{ color: '#374151', fontSize: 11 }}>Powered by</span>
-            <span style={{ fontSize: 11, fontWeight: 700, background: 'linear-gradient(135deg,#7c3aed,#06b6d4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>UniCard</span>
-            <span style={{ color: '#374151', fontSize: 11 }}>× Particle × Magic</span>
-          </div>
-        </div>
-
-        {/* ── Right: OTP Form ── */}
-        <div style={{
-          flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          padding: '48px 40px', background: '#fff',
-        }}>
-          <div style={{ width: '100%', maxWidth: 400 }}>
-            <h2 style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.03em', marginBottom: 8, color: '#0f172a' }}>
-              Get Started
-            </h2>
-            <p style={{ color: '#64748b', fontSize: 14, marginBottom: 36, lineHeight: 1.6 }}>
-              Enter your email to sign in or create your account.
-            </p>
-
-            <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 }}>
-                  Email address
-                </label>
-                <input
-                  id="email-input"
-                  type="email"
-                  placeholder="you@email.com"
-                  value={email}
-                  onChange={e => { setEmail(e.target.value); setError(''); }}
-                  disabled={!!loadingProvider}
-                  autoFocus
-                  style={{
-                    width: '100%', padding: '13px 16px', fontSize: 15,
-                    border: `1.5px solid ${error ? '#ef4444' : '#e2e8f0'}`,
-                    borderRadius: 12, outline: 'none', fontFamily: 'inherit',
-                    boxSizing: 'border-box', color: '#111', background: '#fafafa',
-                    transition: 'border-color 0.2s',
-                  }}
-                />
-              </div>
-
-              {error && (
-                <p style={{ color: '#ef4444', fontSize: 13, margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span>⚠</span> {error}
-                </p>
-              )}
-
-              <button
-                id="login-btn"
-                type="submit"
-                disabled={!!loadingProvider || !email}
-                style={{
-                  width: '100%', padding: '14px',
-                  background: !!loadingProvider || !email
-                    ? '#e2e8f0'
-                    : 'linear-gradient(135deg,#7c3aed,#06b6d4)',
-                  color: !!loadingProvider || !email ? '#94a3b8' : '#fff',
-                  border: 'none', borderRadius: 12, fontSize: 15, fontWeight: 700,
-                  cursor: !!loadingProvider || !email ? 'not-allowed' : 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                  transition: 'all 0.2s',
-                  marginTop: 4,
-                }}
-              >
-                {loadingProvider === 'email' ? (
-                  <>
-                    <span style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid #fff', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />
-                    Sending code…
-                  </>
-                ) : loadingProvider === 'callback' ? (
-                  <>
-                    <span style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid #fff', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />
-                    Signing in…
-                  </>
-                ) : 'Continue with Email →'}
-              </button>
-            </form>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '24px 0' }}>
-              <div style={{ flex: 1, height: 1, background: '#f1f5f9' }}></div>
-              <span style={{ fontSize: 13, color: '#94a3b8', fontWeight: 500 }}>or</span>
-              <div style={{ flex: 1, height: 1, background: '#f1f5f9' }}></div>
-            </div>
-
-            <div style={{ display: 'flex', gap: 12 }}>
-              <SocialButton provider="google" label="Google" icon={
-                <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/><path fill="none" d="M1 1h22v22H1z"/></svg>
-              } />
-              {/* <SocialButton provider="apple" label="Apple" icon={
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="#111"><path d="M17.05 20.28c-.98.95-2.05 1.8-3.08 1.8-1.09 0-1.44-.65-2.67-.65-1.2 0-1.58.65-2.65.65-1.09 0-2.22-.91-3.23-1.98C3.12 17.65 1.06 13.06 3.4 9.9c1.16-1.57 2.87-2.58 4.74-2.58 1.19 0 2.29.58 2.92.58.61 0 1.94-.74 3.34-.74 1.79 0 3.27.76 4.14 1.94-3.66 1.91-3.09 7.07.45 8.43-.88 1.4-1.94 1.75-2.05 2.75h-.01zM15.11 3.93c-1.12.02-2.31.57-3.07 1.34-.69.7-1.24 1.72-1.09 2.71 1.22.06 2.37-.52 3.12-1.32.72-.75 1.22-1.8 1.04-2.73z"/></svg>
-              } /> */}
-              <SocialButton provider="twitter" label="" icon={
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="#111"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-              } />
-            </div>
-
-            <div style={{ marginTop: 32, paddingTop: 24, borderTop: '1px solid #f1f5f9', textAlign: 'center' }}>
-              <p style={{ fontSize: 12, color: '#94a3b8', margin: 0 }}>
-                Powered by <strong style={{ color: '#7c3aed' }}>Magic</strong> × <strong style={{ color: '#06b6d4' }}>Particle Network</strong>
+        <aside className="au-brand">
+          <div className="au-brand-inner">
+            <div className="au-brand-copy">
+              <h2 className="au-brand-title">Your Universal Crypto Wallet</h2>
+              <p className="au-brand-sub">
+                Pay for anything with any token — UniCard handles cross-chain routing automatically.
               </p>
-              <p style={{ fontSize: 11, color: '#cbd5e1', marginTop: 4 }}>Non-custodial · Your keys, your account.</p>
             </div>
+            <ul className="au-features">
+              {FEATURES.map((f) => (
+                <li className="au-feature" key={f.title}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="11" fill="#0FA97D" />
+                    <path d="M7.5 12.2l3 3 6-6.4" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <div className="au-feature-text">
+                    <span className="au-feature-title">{f.title}</span>
+                    <span className="au-feature-sub">{f.sub}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </aside>
+
+        <div className="au-form">
+          <div className="au-head">
+            <h1 className="au-title">Get started</h1>
+            <p className="au-subtitle">
+              Use your email to sign in or create your account — no wallet or seed phrase needed. UniCard creates one for you.
+            </p>
+          </div>
+
+          <form onSubmit={handleLogin} className="au-field">
+            <label htmlFor="email-input" className="au-label">Email address</label>
+            <div className="au-input">
+              <input
+                id="email-input"
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                placeholder="you@email.com"
+                value={email}
+                disabled={busy}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setError('');
+                }}
+                autoFocus
+              />
+            </div>
+
+            {error && (
+              <p className="au-error" role="alert">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
+                  <path d="M12 7.5v5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  <circle cx="12" cy="16" r="1" fill="currentColor" />
+                </svg>
+                {error}
+              </p>
+            )}
+
+            <button type="submit" className="au-primary" disabled={busy || !email}>
+              {loadingProvider === 'email' ? (
+                <><span className="au-spinner" aria-hidden="true" /> Sending code…</>
+              ) : loadingProvider === 'callback' ? (
+                <><span className="au-spinner" aria-hidden="true" /> Signing in…</>
+              ) : (
+                'Continue with Email →'
+              )}
+            </button>
+          </form>
+
+          <div className="au-or">
+            <span className="au-or-line" />
+            <span className="au-or-text">or</span>
+            <span className="au-or-line" />
+          </div>
+
+          <button
+            type="button"
+            className="au-social"
+            onClick={() => handleSocialLogin('google')}
+            disabled={busy}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+            </svg>
+            Google
+          </button>
+
+          <div className="au-footer">
+            <p className="au-powered">Powered by Magic × Particle Network</p>
+            <p className="au-note">Non-custodial · Your keys, your account.</p>
           </div>
         </div>
       </div>
 
-      <style>{`
-        @keyframes spin { to { transform: rotate(360deg); } }
-        #email-input:focus { border-color: #7c3aed !important; background: #fff !important; }
+      <style jsx global>{`
+        body { background: #ffffff; }
+      `}</style>
+
+      <style jsx>{`
+        .au {
+          display: grid;
+          min-height: 100vh;
+          background: #ffffff;
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+          color: #0e0e0e;
+          grid-template-columns: minmax(0, 1fr) 498px;
+          grid-template-rows: 1fr auto auto 1fr;
+          grid-template-areas:
+            '.    brand'
+            'logo brand'
+            'form brand'
+            '.    brand';
+          column-gap: 0;
+        }
+        .au-logo { grid-area: logo; justify-self: center; align-self: end; display: inline-flex; padding-bottom: 24px; }
+        .au-form {
+          grid-area: form;
+          justify-self: center;
+          align-self: start;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          width: 100%;
+          max-width: 400px;
+          padding: 0 24px;
+          gap: 20px;
+        }
+        .au-head { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .au-title { margin: 0; font-size: 26px; font-weight: 600; letter-spacing: -0.015em; color: #0e0e0e; }
+        .au-subtitle { margin: 0; font-size: 14px; line-height: 1.5; text-align: center; color: #71717a; }
+        .au-field { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+        .au-label { font-size: 13px; font-weight: 600; color: #0e0e0e; }
+        .au-input {
+          display: flex; align-items: center; height: 50px; padding: 0 16px;
+          background: #fff; border: 1.5px solid #e4e4e7; border-radius: 12px;
+          transition: border-color 0.15s ease;
+        }
+        .au-input:focus-within { border-color: #00f3ab; }
+        .au-input input {
+          width: 100%; border: none; outline: none; background: transparent;
+          font-family: inherit; font-size: 15px; color: #0e0e0e;
+        }
+        .au-input input::placeholder { color: #a1a1ab; }
+        .au-error { display: flex; align-items: center; gap: 6px; margin: 0; font-size: 12.5px; color: #e5484d; }
+        .au-primary {
+          display: flex; align-items: center; justify-content: center; gap: 8px;
+          height: 50px; width: 100%; border: none; border-radius: 12px;
+          background: #00f3ab; font-family: inherit; font-size: 15px; font-weight: 600;
+          color: #062018; cursor: pointer; transition: filter 0.15s ease;
+        }
+        .au-primary:hover:not(:disabled) { filter: brightness(0.96); }
+        .au-primary:disabled { background: #e4e4e7; color: #a1a1aa; cursor: not-allowed; }
+        .au-or { display: flex; align-items: center; gap: 12px; width: 100%; }
+        .au-or-line { flex: 1; height: 1px; background: #e4e4e7; }
+        .au-or-text { font-size: 13px; font-weight: 500; color: #71717a; }
+        .au-social {
+          display: flex; align-items: center; justify-content: center; gap: 10px;
+          height: 48px; width: 100%; background: #fff; border: 1px solid #e4e4e7; border-radius: 12px;
+          font-family: inherit; font-size: 14px; font-weight: 600; color: #0e0e0e;
+          cursor: pointer; transition: background 0.15s ease;
+        }
+        .au-social:hover:not(:disabled) { background: #fafafa; }
+        .au-social:disabled { opacity: 0.6; cursor: not-allowed; }
+        .au-footer { display: flex; flex-direction: column; align-items: center; gap: 4px; margin-top: 8px; }
+        .au-powered { margin: 0; font-size: 12px; font-weight: 600; color: #0fa97d; text-align: center; }
+        .au-note { margin: 0; font-size: 11px; color: #71717a; text-align: center; }
+        .au-spinner {
+          width: 16px; height: 16px; border: 2px solid rgba(6, 32, 24, 0.25);
+          border-top-color: #062018; border-radius: 50%; animation: au-spin 0.7s linear infinite;
+        }
+        @keyframes au-spin { to { transform: rotate(360deg); } }
+
+        /* Brand panel — beige card on the right */
+        .au-brand { grid-area: brand; display: flex; padding: 28px 28px 28px 0; }
+        .au-brand-inner {
+          display: flex; flex-direction: column; justify-content: center; width: 100%;
+          padding: 40px 56px; background: #f7f6f4; border: 1px solid #e8e8e8;
+          border-radius: 20px; box-shadow: 0 12px 32px -8px rgba(51, 46, 36, 0.06);
+        }
+        .au-brand-copy { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+        .au-brand-title { margin: 0; font-size: 21px; font-weight: 700; line-height: 1.3; letter-spacing: -0.02em; color: #0e0e0e; }
+        .au-brand-sub { margin: 0; font-size: 14px; line-height: 1.55; color: #474d52; max-width: 340px; }
+        .au-features { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+        .au-feature { display: flex; align-items: flex-start; gap: 12px; }
+        .au-feature svg { flex-shrink: 0; margin-top: 1px; }
+        .au-feature-text { display: flex; flex-direction: column; gap: 2px; }
+        .au-feature-title { font-size: 14px; font-weight: 600; color: #0e0e0e; }
+        .au-feature-sub { font-size: 13px; color: #596166; }
+
+        /* Mobile: single column — logo, beige card, form */
+        @media (max-width: 900px) {
+          .au {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 24px;
+          }
+          .au-logo { align-self: center; padding-bottom: 0; margin-bottom: 28px; }
+          .au-brand { width: 100%; max-width: 400px; padding: 0; margin-bottom: 28px; }
+          .au-brand-inner { padding: 24px; }
+          .au-brand-sub { max-width: none; }
+          .au-form { padding: 0; max-width: 400px; }
+        }
       `}</style>
     </>
   );
