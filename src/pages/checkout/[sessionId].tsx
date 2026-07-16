@@ -103,15 +103,17 @@ export default function CheckoutPage({ session, item }: CheckoutPageProps) {
       setOtpError('Sign-in is unavailable right now. Please try again.');
       return;
     }
-    // Reuses /login's existing OAuth callback handling — it reads this same
-    // sessionStorage key and redirects back here once Magic completes.
-    sessionStorage.setItem('magic_oauth_next', `/checkout/${session.id}`);
+    // Reuses /login's existing OAuth callback handling. The destination is
+    // carried in the redirect URL (?next=) so it survives the OAuth roundtrip
+    // even if sessionStorage doesn't; sessionStorage stays as the fast path.
+    const next = `/checkout/${session.id}`;
+    sessionStorage.setItem('magic_oauth_next', next);
     try {
       setOtpSubmitting(true);
       setOtpError(null);
       await magic.oauth2.loginWithRedirect({
         provider: 'google',
-        redirectURI: new URL('/login', window.location.origin).href,
+        redirectURI: new URL(`/login?next=${encodeURIComponent(next)}`, window.location.origin).href,
       });
     } catch (err) {
       console.error('Social login init error:', err);

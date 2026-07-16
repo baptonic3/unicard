@@ -79,7 +79,7 @@ export default function LoginPage() {
           if (didToken && publicAddress) {
             setToken(didToken);
             saveUserInfo(didToken, result.oauth.provider.toUpperCase(), publicAddress);
-            const nextUrl = sessionStorage.getItem('magic_oauth_next') || '/dashboard';
+            const nextUrl = sessionStorage.getItem('magic_oauth_next') || getNext();
             sessionStorage.removeItem('magic_oauth_next');
             router.replace(nextUrl);
           }
@@ -123,13 +123,14 @@ export default function LoginPage() {
 
   const handleSocialLogin = async (provider: 'google' | 'apple' | 'twitter') => {
     if (!magic) return;
-    sessionStorage.setItem('magic_oauth_next', getNext());
+    const next = getNext();
+    sessionStorage.setItem('magic_oauth_next', next);
     try {
       setLoadingProvider(provider);
       setError('');
       await magic.oauth2.loginWithRedirect({
         provider,
-        redirectURI: new URL('/login', window.location.origin).href,
+        redirectURI: new URL(`/login?next=${encodeURIComponent(next)}`, window.location.origin).href,
       });
     } catch (err) {
       console.error('Social login init error:', err);
