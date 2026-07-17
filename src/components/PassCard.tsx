@@ -66,7 +66,9 @@ export default function PassCard({
           </div>
           <div>
             <div style={{ fontSize: 13, color: '#10b981', fontWeight: 600 }}>Pass Issued</div>
-            <div style={{ fontSize: 11, color: '#64748b' }}>Arbitrum One • Pass #{passId}</div>
+            <div style={{ fontSize: 11, color: '#64748b' }}>
+              Arbitrum One • {passId && Number(passId) > 0 ? `Pass #${passId}` : 'Confirmed'}
+            </div>
           </div>
         </div>
 
@@ -97,19 +99,21 @@ export default function PassCard({
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div style={{ fontSize: 11, color: '#64748b', marginBottom: 2 }}>On-chain proof</div>
 
-          <a href={arbUrl} target="_blank" rel="noopener noreferrer" style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            padding: '12px 16px', borderRadius: 10,
-            background: '#f8fafc', border: '1px solid #e2e8f0',
-            color: '#334155', textDecoration: 'none', fontSize: 13, fontWeight: 600,
-            transition: 'background 0.2s',
-          }}>
-            View on Arbiscan
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" style={{ marginLeft: 'auto' }}>
-              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-              <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
-            </svg>
-          </a>
+          {arbTxHash && (
+            <a href={arbUrl} target="_blank" rel="noopener noreferrer" style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              padding: '12px 16px', borderRadius: 10,
+              background: '#f8fafc', border: '1px solid #e2e8f0',
+              color: '#334155', textDecoration: 'none', fontSize: 13, fontWeight: 600,
+              transition: 'background 0.2s',
+            }}>
+              View on Arbiscan
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" style={{ marginLeft: 'auto' }}>
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+              </svg>
+            </a>
+          )}
 
           {particleTxId && (
             <a href={uxUrl} target="_blank" rel="noopener noreferrer" style={{

@@ -4,11 +4,21 @@ async function main() {
   console.log('🌱 Seeding database...');
 
   // Clear existing
+  await db.checkoutSession.deleteMany();
   await db.pass.deleteMany();
   await db.accessItem.deleteMany();
 
   // Seed access items
   const items = [
+    {
+      slug: 'onchain-rooftop-mixer',
+      title: "Onchain Rooftop — Builders' Mixer",
+      description: 'Wed, Jul 22 · 5:00–9:00 PM · StartDock Coworking, Amsterdam',
+      imageUrl: 'https://i.postimg.cc/TPvzWpB8/event.png',
+      priceUSDC: 5,
+      chainItemId: null,
+      active: true,
+    },
     {
       slug: 'unicard-launch-party',
       title: 'UniCard Launch Party',

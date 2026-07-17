@@ -99,18 +99,31 @@ export default function CheckoutPage({ session, item }: CheckoutPageProps) {
 
   // ── After purchase: full-page receipt ──
   if (purchaseResult) {
+    const successHref = (() => {
+      try {
+        const url = new URL(session.successUrl);
+        url.searchParams.set('session_id', session.id);
+        url.searchParams.set('pass_id', String(purchaseResult.passId));
+        url.searchParams.set('status', 'success');
+        return url.toString();
+      } catch { return session.successUrl; }
+    })();
+
     return (
-      <div style={{ minHeight: '100vh', background: t.bg, fontFamily: 'Inter, sans-serif', transition: 'background 0.25s' }}>
+      <div style={{ minHeight: '100vh', background: '#f8fafc', fontFamily: 'Inter, sans-serif' }}>
         <Header token={token} setToken={setToken} />
-        <div style={{ maxWidth: 520, margin: '0 auto', padding: '48px 24px' }}>
+        <div style={{ maxWidth: 540, margin: '0 auto', padding: '48px 24px 80px' }}>
+
+          {/* Success header */}
           <div style={{ textAlign: 'center', marginBottom: 32 }}>
-            <div style={{ fontSize: 48, marginBottom: 12 }}>🎉</div>
-            <h1 style={{ fontSize: 26, fontWeight: 800, color: t.text, letterSpacing: '-0.02em', marginBottom: 6 }}>
+            <div style={{ fontSize: 52, marginBottom: 16 }}>🎉</div>
+            <h1 style={{ fontSize: 28, fontWeight: 800, color: '#111', letterSpacing: '-0.02em', marginBottom: 8 }}>
               Payment Complete!
             </h1>
-            <p style={{ color: t.subtext, fontSize: 14 }}>Your access pass has been issued on Arbitrum.</p>
+            <p style={{ color: '#64748b', fontSize: 14 }}>Your access pass has been issued on Arbitrum.</p>
           </div>
 
+          {/* PassCard */}
           <PassCard
             passId={purchaseResult.passId}
             itemTitle={item.title}
@@ -122,32 +135,23 @@ export default function CheckoutPage({ session, item }: CheckoutPageProps) {
             particleTxId={purchaseResult.particleTxId}
           />
 
-          {/* Return CTA */}
-          <div style={{ marginTop: 24, textAlign: 'center' }}>
+          {/* CTAs */}
+          <div style={{ marginTop: 28, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
             <a
-              href={(() => {
-                try {
-                  const url = new URL(session.successUrl);
-                  url.searchParams.set('session_id', session.id);
-                  url.searchParams.set('pass_id', String(purchaseResult.passId));
-                  url.searchParams.set('status', 'success');
-                  return url.toString();
-                } catch { return session.successUrl; }
-              })()}
+              href={successHref}
               style={{
-                display: 'inline-flex', alignItems: 'center', gap: 8,
-                padding: '14px 28px', borderRadius: 12, fontWeight: 700, fontSize: 15,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                width: '100%', padding: '16px 0', borderRadius: 14, fontWeight: 700, fontSize: 16,
                 background: '#00e599', color: '#fff', textDecoration: 'none',
+                boxShadow: '0 4px 16px rgba(0,229,153,0.35)',
                 transition: 'opacity 0.2s',
               }}
             >
-              {item.title ? `Return to checkout →` : 'Return to seller →'}
+              Return to checkout →
             </a>
-            <div style={{ marginTop: 12 }}>
-              <Link href="/dashboard" style={{ fontSize: 13, color: t.subtext, textDecoration: 'none' }}>
-                View in my wallet →
-              </Link>
-            </div>
+            <Link href="/dashboard" style={{ fontSize: 14, color: '#64748b', textDecoration: 'none', fontWeight: 500 }}>
+              View in my wallet →
+            </Link>
           </div>
         </div>
       </div>
@@ -352,9 +356,9 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
     slug: session.item.slug,
     title: session.item.title,
     description: session.item.description,
-    imageUrl: session.item.imageUrl ?? undefined,
+    imageUrl: session.item.imageUrl ?? null,
     priceUSDC: session.item.priceUSDC,
-    chainItemId: session.item.chainItemId ?? undefined,
+    chainItemId: session.item.chainItemId ?? null,
     active: session.item.active,
   };
 

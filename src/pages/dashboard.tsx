@@ -8,6 +8,7 @@ import { useUniversalAccount } from '@/hooks/UniversalAccountProvider';
 import Header from '@/components/Header';
 import DelegationCard from '@/components/DelegationCard';
 import UnifiedBalanceCard from '@/components/UnifiedBalanceCard';
+import PassCard from '@/components/PassCard';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -17,6 +18,7 @@ export default function Dashboard() {
   const [mounted, setMounted] = useState(false);
   const [passes, setPasses] = useState<any[]>([]);
   const [isDark, setIsDark] = useState(false);
+  const [selectedPass, setSelectedPass] = useState<any | null>(null);
 
   const t = isDark
     ? { bg: '#0f0f14', surface: '#1a1a24', border: 'rgba(255,255,255,0.08)', text: '#f0f0f5', subtext: '#8892a4', muted: '#333344', accent: '#00e599', navBorder: 'rgba(255,255,255,0.07)', navBg: '#15151f', activeTab: '#fff', cardShadow: '0 2px 12px rgba(0,0,0,0.4)' }
@@ -47,8 +49,47 @@ export default function Dashboard() {
   const balance = Number(primaryAssets?.totalAmountInUSD ?? 0).toFixed(2);
   const isPendingEvent = router.query.pending === 'true';
 
+  // PassCard modal overlay
+  const passModal = selectedPass && (
+    <div
+      onClick={() => setSelectedPass(null)}
+      style={{
+        position: 'fixed', inset: 0,
+        background: 'rgba(255,255,255,0.88)',
+        backdropFilter: 'blur(4px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        zIndex: 9999, padding: '1rem',
+      }}
+    >
+      <div onClick={e => e.stopPropagation()} style={{ position: 'relative', width: '100%', maxWidth: 480 }}>
+        <button
+          onClick={() => setSelectedPass(null)}
+          style={{
+            position: 'absolute', top: -14, right: -14, zIndex: 10,
+            width: 32, height: 32, borderRadius: '50%',
+            background: '#fff', border: '1px solid #e2e8f0',
+            fontSize: 18, color: '#64748b', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+          }}
+        >×</button>
+        <PassCard
+          passId={selectedPass.chainPassId ?? selectedPass.id}
+          itemTitle={selectedPass.item?.title || 'Access Pass'}
+          itemDescription={selectedPass.item?.description}
+          itemImageUrl={selectedPass.item?.imageUrl ?? undefined}
+          priceUSDC={selectedPass.item?.priceUSDC ?? 0}
+          buyerAddress={selectedPass.buyerAddress || ''}
+          arbTxHash={selectedPass.arbitrumTxHash || ''}
+          particleTxId={selectedPass.particleTxId || ''}
+        />
+      </div>
+    </div>
+  );
+
   return (
     <>
+      {passModal}
       <Head>
         <title>Wallet | UniCard</title>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -274,10 +315,22 @@ export default function Dashboard() {
                     </div>
 
                     {passes.length === 0 ? (
-                      <div style={{ fontSize: '14px', color: t.subtext, marginTop: '16px' }}>No recent activity. Mint a pass to get started!</div>
+                      <div style={{ fontSize: '14px', color: t.subtext, marginTop: '16px' }}>No recent activity.</div>
                     ) : (
                       passes.map(pass => (
-                        <div key={pass.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '16px', borderBottom: `1px solid ${t.border}`, marginBottom: '16px', marginTop: '16px' }}>
+                        <div
+                          key={pass.id}
+                          onClick={() => setSelectedPass(pass)}
+                          style={{
+                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                            paddingBottom: '16px', borderBottom: `1px solid ${t.border}`,
+                            marginBottom: '16px', marginTop: '16px',
+                            cursor: 'pointer', borderRadius: 8, padding: '12px 8px',
+                            transition: 'background 0.15s',
+                          }}
+                          onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')}
+                          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                        >
                           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                             <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: isDark ? 'rgba(255,255,255,0.06)' : '#f8fafc', border: `1px solid ${t.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
