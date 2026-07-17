@@ -12,7 +12,7 @@ export default function DemoCheckoutPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          itemSlug: 'arbitrum-hackathon-uxmaxx', // Note: will change this later 
+          itemSlug: 'arbitrum-hackathon-uxmaxx', // Note: will change this later
           successUrl: `${window.location.origin}/demo?success=true`,
           cancelUrl: `${window.location.origin}/demo/checkout`,
         }),
@@ -48,141 +48,131 @@ export default function DemoCheckoutPage() {
           }
         `}</style>
       </Head>
-      <div style={{ minHeight: '100vh', background: '#f2f2f2', color: '#141414', fontFamily: 'Inter, sans-serif', paddingBottom: 64, display: 'flex', flexDirection: 'column' }}>
-        
-        {/* Nav matching demo.tsx exactly */}
-        <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 24px', borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
-          <div style={{ fontWeight: 600, fontSize: 15, color: '#a2a2a2', display: 'flex', alignItems: 'center', gap: '6px' }}>
-             <span style={{ fontSize: 18 }}>✦</span> Magical events
+      <div className="min-h-screen bg-[#f2f2f2] text-[#141414] font-[Inter,sans-serif] pb-16 flex flex-col">
+
+        {/* Nav — matches /demo exactly */}
+        <nav className="flex items-center justify-between px-6 py-3 bg-[#f2f2f2] border-b border-black/5">
+          <div className="font-semibold text-[15px] text-[#a2a2a2] flex items-center gap-1.5">
+            <span className="text-lg">✦</span> Magical events
           </div>
-          <div style={{ display: 'flex', gap: 16, fontSize: 14, color: 'rgba(19,21,23,0.36)', alignItems: 'center', fontWeight: 500 }}>
-            <span>11:29 AM UTC</span>
-            <span>Discover Events</span>
-            <div style={{ padding: '8px 16px', borderRadius: 20, background: 'rgba(19,21,23,0.04)', color: 'rgba(19,21,23,0.64)' }}>
-              Sign In
-            </div>
+          <div className="flex gap-4 text-sm text-[rgba(19,21,23,0.36)] items-center font-medium">
+            <span className="hidden lg:inline">11:29 AM UTC</span>
+            <span className="hidden lg:inline">Discover Events</span>
+            <img src="/demo/avatar-nav-user.png" alt="User" className="w-[30px] h-[30px] rounded-full object-cover" />
           </div>
         </nav>
 
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          {/* Main 960px wide section */}
-          <div style={{ width: 960, margin: '80px auto', display: 'flex', flexDirection: 'column', gap: 80 }}>
-            
-            {/* 2 Column Layout */}
-            <div style={{ display: 'flex', gap: 48, alignItems: 'flex-start' }}>
-              
-              {/* Left Column — Order Summary (360px) */}
-              <div style={{ width: 360, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 20 }}>
-                {/* Image */}
-                <div style={{ width: 360, height: 360, borderRadius: 24, background: '#e2e8f0', backgroundImage: 'url(https://i.postimg.cc/TPvzWpB8/event.png)', backgroundSize: 'cover', backgroundPosition: 'center', border: '1px solid rgba(255,255,255,0.16)', boxShadow: '0 1px 4px rgba(0,0,0,0.1)' }}></div>
-                
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <div style={{ fontSize: 20, fontWeight: 500, color: '#210032' }}>Onchain Rooftop — Builders' Mixer</div>
-                  <div style={{ fontSize: 14, color: 'rgba(20,20,20,0.64)' }}>Wednesday, July 22 · 5:00 PM – 9:00 PM</div>
-                  <div style={{ fontSize: 14, color: 'rgba(20,20,20,0.64)' }}>StartDock Coworking Prins Hendrikkade, Amsterdam</div>
+        <div className="flex-1 flex flex-col items-center">
+          {/* Main content */}
+          <div className="w-full max-w-[960px] mx-auto mt-10 lg:mt-16 px-4 flex flex-col gap-12 lg:gap-20">
+
+            {/* Order summary + payment card */}
+            <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
+
+              {/* Order Summary — matches /demo's left sidebar column (330px) */}
+              <div className="w-full lg:w-[330px] lg:shrink-0 flex flex-col gap-5">
+                <div className="w-full aspect-square lg:w-[330px] lg:h-[330px] rounded-3xl border border-[rgba(255,255,255,0.16)] shadow-[0_1px_4px_rgba(0,0,0,0.1)] bg-cover bg-center bg-[url('https://i.postimg.cc/TPvzWpB8/event.png')]" />
+
+                <div className="flex flex-col gap-2">
+                  <div className="text-xl font-medium text-[#210032]">Onchain Rooftop — Builders' Mixer</div>
+                  <div className="text-sm text-[rgba(20,20,20,0.64)]">Wednesday, July 22 · 5:00 PM – 9:00 PM</div>
+                  <div className="text-sm text-[rgba(20,20,20,0.64)]">StartDock Coworking Prins Hendrikkade, Amsterdam</div>
                 </div>
 
-                <div style={{ height: 1, background: 'rgba(33,0,50,0.08)' }}></div>
+                <div className="h-px bg-[rgba(33,0,50,0.08)]" />
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: 14 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'rgba(20,20,20,0.64)' }}>Standard Ticket × 1</span>
-                    <span style={{ color: '#210032' }}>$5.00</span>
+                <div className="flex flex-col gap-2.5 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-[rgba(20,20,20,0.64)]">Standard Ticket × 1</span>
+                    <span className="text-[#210032]">$5.00</span>
                   </div>
-                  {/* <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'rgba(20,20,20,0.64)' }}>Fees</span>
-                    <span style={{ color: '#210032' }}>$0.00</span>
-                  </div> */}
-                  <div style={{ height: 1, background: 'rgba(33,0,50,0.08)', margin: '4px 0' }}></div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16, fontWeight: 500 }}>
-                    <span style={{ color: '#210032' }}>Total</span>
-                    <span style={{ color: '#210032' }}>$5.00</span>
+                  <div className="h-px bg-[rgba(33,0,50,0.08)] my-1" />
+                  <div className="flex justify-between text-base font-medium">
+                    <span className="text-[#210032]">Total</span>
+                    <span className="text-[#210032]">$5.00</span>
                   </div>
                 </div>
               </div>
 
-              {/* Right Column — Payment Card (552px) */}
-              <div style={{ width: 552, flexShrink: 0, background: '#fff', borderRadius: 24, boxShadow: '0 1px 4px rgba(0,0,0,0.1)', border: '1px solid rgba(255,255,255,0.7)', overflow: 'hidden' }}>
-                <div style={{ background: 'rgba(46,46,46,0.04)', padding: '16px 20px', borderBottom: '1px solid rgba(0,0,0,0.05)', fontSize: 14, fontWeight: 500, color: 'rgba(72,72,72,0.8)' }}>
+              {/* Payment Card — matches /demo's "Get Tickets" card (fluid width, same column as the sidebar's sibling) */}
+              <div className="w-full lg:flex-1 lg:min-w-0 bg-white rounded-3xl shadow-[0_1px_4px_rgba(0,0,0,0.1)] border border-[rgba(255,255,255,0.7)] overflow-hidden">
+                <div className="bg-[rgba(46,46,46,0.04)] px-5 py-3 text-sm font-medium text-[rgba(72,72,72,0.8)]">
                   Checkout
                 </div>
 
-                <div style={{ padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: 20 }}>
-                  <div style={{ borderBottom: '1px solid rgba(33,0,50,0.08)', paddingBottom: 16 }}>
-                    <div style={{ fontSize: 14, color: 'rgba(20,20,20,0.64)', marginBottom: 4 }}>Ticket Price</div>
-                    <div style={{ fontSize: 24, fontWeight: 500, color: '#210032' }}>$5.00</div>
+                <div className="p-5 flex flex-col gap-5">
+                  <div className="border-b border-[rgba(33,0,50,0.08)] pb-4">
+                    <div className="text-sm text-[rgba(20,20,20,0.64)] mb-1">Ticket Price</div>
+                    <div className="text-2xl font-medium text-[#210032]">$5.00</div>
                   </div>
 
-                  <div style={{ fontSize: 16, color: '#210032' }}>
+                  <div className="text-base text-[#210032]">
                     Welcome! To join the event, please get your ticket below.
                   </div>
 
-                  {/* <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <label style={{ fontSize: 13, fontWeight: 500, color: 'rgba(20,20,20,0.64)' }}>Name</label>
-                    <input placeholder="Your full name" style={{ padding: '0 14px', height: 42, borderRadius: 12, border: '1px solid rgba(33,0,50,0.1)', background: 'rgba(255,255,255,0.8)', fontSize: 15, outline: 'none' }} />
-                  </div> */}
-
-                  {/* <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <label style={{ fontSize: 13, fontWeight: 500, color: 'rgba(20,20,20,0.64)' }}>Email</label>
-                    <input placeholder="you@example.com" type="email" style={{ padding: '0 14px', height: 42, borderRadius: 12, border: '1px solid rgba(33,0,50,0.1)', background: 'rgba(255,255,255,0.8)', fontSize: 15, outline: 'none' }} />
-                  </div> */}
-
-                  <button style={{ height: 44, background: '#636363', color: '#fff', borderRadius: 16, fontWeight: 500, fontSize: 16, border: 'none', cursor: 'pointer' }}>
-                    Get Ticket · $5.00
+                  <button className="h-11 bg-[#636363] text-white rounded-2xl font-medium text-base border-0 cursor-pointer">
+                    Pay with card
                   </button>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div style={{ flex: 1, height: 1, background: 'rgba(33,0,50,0.08)' }}></div>
-                    <div style={{ fontSize: 13, color: 'rgba(20,20,20,0.64)' }}>or</div>
-                    <div style={{ flex: 1, height: 1, background: 'rgba(33,0,50,0.08)' }}></div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 h-px bg-[rgba(33,0,50,0.08)]" />
+                    <div className="text-[13px] text-[rgba(20,20,20,0.64)]">or</div>
+                    <div className="flex-1 h-px bg-[rgba(33,0,50,0.08)]" />
                   </div>
 
-                  <button 
-                    onClick={handleCryptoBuy}
-                    disabled={isProcessing}
-                    style={{ 
-                      height: 48, background: '#fff', border: '1px solid rgba(33,0,50,0.16)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, cursor: isProcessing ? 'not-allowed' : 'pointer', transition: 'all 0.2s ease', animation: isProcessing ? 'pulse-btn 1.5s infinite ease-in-out' : 'none', opacity: isProcessing ? 0.9 : 1
-                    }}
-                    onMouseOver={e => !isProcessing && (e.currentTarget.style.background = '#fafafa')}
-                    onMouseOut={e => !isProcessing && (e.currentTarget.style.background = '#fff')}
-                  >
-                    {isProcessing ? (
-                      <span style={{ width: 18, height: 18, border: '2.5px solid rgba(0,0,0,0.1)', borderTop: '2.5px solid #210032', borderRadius: '50%', display: 'inline-block', animation: 'spin-loader 0.8s linear infinite' }} />
-                    ) : (
-                      <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <div style={{ width: 20, height: 20, borderRadius: 10, background: '#f7931a', border: '1.5px solid #fff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 10, fontWeight: 600, zIndex: 3 }}>₿</div>
-                        <div style={{ width: 20, height: 20, borderRadius: 10, background: '#627eea', border: '1.5px solid #fff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 10, fontWeight: 600, marginLeft: -6, zIndex: 2 }}>Ξ</div>
-                        <div style={{ width: 20, height: 20, borderRadius: 10, background: '#2775ca', border: '1.5px solid #fff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 10, fontWeight: 600, marginLeft: -6, zIndex: 1 }}>$</div>
-                      </div>
-                    )}
-                    <span style={{ fontSize: 16, fontWeight: 500, color: '#210032' }}>
-                      {isProcessing ? 'Generating Session...' : 'Pay with crypto'}
-                    </span>
-                  </button>
+                  <div className="flex flex-col gap-2">
+                    <button
+                      onClick={handleCryptoBuy}
+                      disabled={isProcessing}
+                      className={`h-11 bg-[rgba(255,255,255,0.9)] border border-[rgba(33,0,50,0.16)] rounded-2xl flex items-center justify-center gap-2.5 transition-all duration-200 hover:bg-[#fafafa] ${isProcessing ? 'cursor-not-allowed opacity-90' : 'cursor-pointer'}`}
+                      style={isProcessing ? { animation: 'pulse-btn 1.5s infinite ease-in-out' } : undefined}
+                    >
+                      {isProcessing ? (
+                        <span
+                          className="w-[18px] h-[18px] rounded-full inline-block border-[2.5px] border-[rgba(0,0,0,0.1)]"
+                          style={{ borderTopColor: '#210032', animation: 'spin-loader 0.8s linear infinite' }}
+                        />
+                      ) : (
+                        <div className="flex items-center">
+                          <img src="/demo/icon-bitcoin.svg" alt="" className="size-4 -mr-1.5" />
+                          <div className="size-4 -mr-1.5 rounded-full bg-[#eceff0] flex items-center justify-center">
+                            <img src="/demo/icon-ethereum.svg" alt="" className="w-[7px] h-3" />
+                          </div>
+                          <div className="size-4 rounded-[10px] bg-black/20 backdrop-blur-[2.5px] flex items-center justify-center overflow-hidden">
+                            <img src="/demo/icon-plus.svg" alt="" className="size-6" />
+                          </div>
+                        </div>
+                      )}
+                      <span className="text-base font-medium text-[#210032]">
+                        {isProcessing ? 'Generating Session...' : 'Pay with crypto'}
+                      </span>
+                    </button>
 
-                  <div style={{ textAlign: 'center', fontSize: 12, color: 'rgba(20,20,20,0.64)' }}>
-                    • powered by Unicard
+                    <div className="flex items-center justify-center gap-1.5">
+                      <span className="text-xs text-[rgba(20,20,20,0.64)]">Powered by</span>
+                      <img src="/demo/logo-unicard.svg" alt="UniCard" className="h-[14px] w-auto" />
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Footer exactly matching the layout */}
-            <div style={{ width: 960, borderTop: '1px solid rgba(20,20,20,0.08)', paddingTop: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div style={{ display: 'flex', gap: 16, fontSize: 14, color: 'rgba(20,20,20,0.36)' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#a2a2a2', fontWeight: 600 }}><span style={{ fontSize: 16 }}>✦</span></span>
-                <span style={{ cursor: 'pointer' }}>Discover</span>
-                <span style={{ cursor: 'pointer' }}>Pricing</span>
-                <span style={{ cursor: 'pointer' }}>Help</span>
+            {/* Footer — matches /demo exactly */}
+            <div className="border-t border-[rgba(20,20,20,0.08)] pt-4 flex flex-wrap justify-between items-start gap-4">
+              <div className="flex flex-wrap items-center gap-4 text-sm text-[rgba(20,20,20,0.36)]">
+                <span className="flex items-center gap-2 text-[#a2a2a2] font-semibold"><span className="text-base">✦</span></span>
+                <span className="cursor-pointer">Discover</span>
+                <span className="cursor-pointer">Pricing</span>
+                <span className="cursor-pointer">Help</span>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                <div style={{ display: 'flex', gap: 12, color: 'rgba(20,20,20,0.36)', fontSize: 16 }}>
-                  <span>📷</span>
-                  <span>🐦</span>
-                  <span>✉️</span>
+              <div className="flex items-center gap-4">
+                <div className="flex gap-3 items-center">
+                  <img src="/demo/icon-instagram.svg" alt="Instagram" width={16} height={16} />
+                  <img src="/demo/icon-x-twitter.svg" alt="X" width={16} height={16} />
+                  <img src="/demo/icon-mail.svg" alt="Email" width={16} height={16} />
                 </div>
-                <div style={{ border: '1px solid rgba(20,20,20,0.36)', color: 'rgba(20,20,20,0.36)', padding: '4px 10px', borderRadius: 20, fontSize: 13, cursor: 'pointer' }}>
+                <div className="border border-[rgba(20,20,20,0.36)] text-[rgba(20,20,20,0.36)] px-2.5 py-1 rounded-full text-[13px] cursor-pointer">
                   Get the App
                 </div>
               </div>
@@ -191,6 +181,25 @@ export default function DemoCheckoutPage() {
           </div>
         </div>
       </div>
+
+      <style jsx global>{`
+        html,
+        body {
+          background-color: #f2f2f2;
+        }
+        html::-webkit-scrollbar-track,
+        body::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        html::-webkit-scrollbar-thumb,
+        body::-webkit-scrollbar-thumb {
+          background: rgba(20, 20, 20, 0.16);
+        }
+        html::-webkit-scrollbar-thumb:hover,
+        body::-webkit-scrollbar-thumb:hover {
+          background: rgba(20, 20, 20, 0.28);
+        }
+      `}</style>
     </>
   );
 }
