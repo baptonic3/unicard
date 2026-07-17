@@ -22,7 +22,9 @@ export default function DemoCheckoutPage() {
       if (!res.ok) throw new Error(data.error || 'Failed to create session');
 
       // Redirect user to login, passing the checkout session as the next step
-      window.location.href = `/login?next=${encodeURIComponent('/checkout/' + data.sessionId)}`;
+      const nextPath = '/checkout/' + data.sessionId;
+      window.localStorage.setItem('pending_checkout', nextPath);
+      window.location.href = `/login?next=${encodeURIComponent(nextPath)}`;
 
     } catch (error) {
       console.error(error);

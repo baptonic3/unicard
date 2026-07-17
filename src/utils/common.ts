@@ -13,6 +13,7 @@ export const logout = async (
   localStorage.removeItem('token');
   localStorage.removeItem('user');
   localStorage.removeItem('loginMethod');
+  localStorage.removeItem('pending_checkout');
   setToken('');
 };
 
