@@ -1,5 +1,6 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { useRouter } from 'next/router';
+import Link from 'next/link';
 import Head from 'next/head';
 import { useMagic } from '@/hooks/MagicProvider';
 import { getUserAddress, saveUserInfo } from '@/utils/common';
@@ -12,7 +13,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [mounted, setMounted] = useState(false);
 
-  // ─── CRITICAL: router.query is empty until router.isReady ───
+  // router.query is empty until router.isReady
   // Must wait for isReady before reading ?next= param
   const getNext = () => {
     if (!router.isReady) return '/dashboard';
@@ -39,7 +40,7 @@ export default function LoginPage() {
   useEffect(() => {
     if (!mounted || !router.isReady) return;
     
-    // Check if we're returning from an OAuth redirect first
+    // Check if returning from an OAuth redirect first
     const search = window.location.search;
     if (search.includes('magic_credential=') || search.includes('state=')) {
       return; // Skip normal auth auto-redirect, let the OAuth handler below process it
@@ -182,10 +183,10 @@ export default function LoginPage() {
           padding: '48px 40px', background: '#fff',
         }}>
           <div style={{ width: '100%', maxWidth: 400 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 36 }}>
+            <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 36, cursor: 'pointer' }}>
               <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_121_1303)"><path d="M26.1053 0H5.89474C2.63917 0 0 2.63917 0 5.89474V26.1053C0 29.3608 2.63917 32 5.89474 32H26.1053C29.3608 32 32 29.3608 32 26.1053V5.89474C32 2.63917 29.3608 0 26.1053 0Z" fill="#00F3AB"/><path d="M8.4209 8.42114H13.1204V12.6468C13.1204 17.9358 16.7876 18.9444 18.3903 18.9444C20.5853 18.8136 22.7639 19.8713 23.5788 20.4166L18.3903 23.579C11.409 23.4427 8.4209 17.7448 8.4209 13.7918V8.42114Z" fill="#010101"/><path d="M23.5517 8.42114H18.3633V18.9717C22.5792 18.6882 23.5789 15.3458 23.5517 13.7101V8.42114Z" fill="#010101"/></g><defs><clipPath id="clip0_121_1303"><rect width="32" height="32" fill="white"/></clipPath></defs></svg>
               <span style={{ fontSize: 20, fontWeight: 800, color: '#111', letterSpacing: '-0.02em' }}>UniCard</span>
-            </div>
+            </Link>
 
             <div style={{ textAlign: 'center', marginBottom: 36 }}>
               <h2 style={{ fontSize: 28, fontWeight: 600, letterSpacing: '-0.03em', marginBottom: 8, color: '#0f172a' }}>

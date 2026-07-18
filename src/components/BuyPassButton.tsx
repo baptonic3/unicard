@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useRouter } from 'next/router';
 import { useUniversalAccount } from '@/hooks/UniversalAccountProvider';
 import { CHAIN_ID, SUPPORTED_TOKEN_TYPE } from '@particle-network/universal-account-sdk';
 import { Interface, parseUnits } from 'ethers'; // ethers v6 — named exports from root
@@ -37,9 +38,11 @@ export default function BuyPassButton({
   onSuccess,
 }: BuyPassButtonProps) {
   const { universalAccount, signAndSend, refreshBalance } = useUniversalAccount();
+  const router = useRouter();
   const [txStep, setTxStep] = useState<TxStep>('idle');
   const [errorMsg, setErrorMsg] = useState<string>('');
   const [result, setResult] = useState<PurchaseResult | null>(null);
+  const [isDuplicatePassError, setIsDuplicatePassError] = useState(false);
 
   const hasEnough = balance >= item.priceUSDC;
   const treasuryWallet = process.env.NEXT_PUBLIC_TREASURY_WALLET;
@@ -78,16 +81,34 @@ export default function BuyPassButton({
       return;
     }
 
+    // verify the wallet doesn't already hold this pass
+    // This prevents money from moving before we discover the on-chain duplicate rejection.
+    try {
+      const checkRes = await fetch(
+        `/api/check-pass?buyer=${encodeURIComponent(buyerAddress)}&itemId=${encodeURIComponent(item.id)}&chainItemId=${encodeURIComponent(item.chainItemId ?? '')}`,
+      );
+      if (checkRes.ok) {
+        const checkData = await checkRes.json();
+        if (checkData.hasPass) {
+          setIsDuplicatePassError(true);
+          setErrorMsg('You already hold a pass for this event. Check your dashboard to view it.');
+          setTxStep('error');
+          return;
+        }
+      }
+    } catch (checkErr) {
+      // Fail open — if the check itself errors, proceed with the purchase
+      console.warn('Pre-flight pass check failed (continuing):', checkErr);
+    }
+
     setErrorMsg('');
     setTxStep('building');
 
     try {
       // ── Step 1: Build the cross-chain USDC payment ──
-      // We use createUniversalTransaction instead of createTransferTransaction:
+      // We use createUniversalTransaction 
       //   • expectTokens tells the SDK to guarantee USDC is delivered to Arbitrum
       //   • transactions encodes the actual ERC-20 transfer() call to the treasury
-      // This avoids the "would fail on target chain" simulation error that occurs
-      // when the smart account doesn't already hold USDC on Arbitrum at build time.
       const usdcAmount = item.priceUSDC.toFixed(6); // e.g. "0.500000"
       const usdcAmountRaw = parseUnits(usdcAmount, 6); // USDC has 6 decimals
 
@@ -248,6 +269,7 @@ export default function BuyPassButton({
   const handleCancel = () => {
     setTxStep('idle');
     setErrorMsg('');
+    setIsDuplicatePassError(false);
   };
 
   // ── Render ──
@@ -274,7 +296,12 @@ export default function BuyPassButton({
   return (
     <>
       {/* Transaction overlay (renders in the DOM but fixed-positioned) */}
-      <TransactionSteps step={txStep} errorMsg={errorMsg} onCancel={handleCancel} />
+      <TransactionSteps
+        step={txStep}
+        errorMsg={errorMsg}
+        onCancel={handleCancel}
+        onDashboard={isDuplicatePassError ? () => router.push('/dashboard') : undefined}
+      />
 
       {/* Success receipt (shown below button after done) */}
       {txStep === 'done' && result && (

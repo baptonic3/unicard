@@ -28,9 +28,10 @@ interface TransactionStepsProps {
   step: TxStep;
   errorMsg?: string;
   onCancel?: () => void;
+  onDashboard?: () => void; 
 }
 
-export default function TransactionSteps({ step, errorMsg, onCancel }: TransactionStepsProps) {
+export default function TransactionSteps({ step, errorMsg, onCancel, onDashboard }: TransactionStepsProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
 
   // Trap focus inside overlay
@@ -136,7 +137,15 @@ export default function TransactionSteps({ step, errorMsg, onCancel }: Transacti
         {/* Error retry / cancel */}
         {(isError || (onCancel && !isDone)) && (
           <div className="tx-actions">
-            {onCancel && (
+            {onDashboard ? (
+              <button
+                className="btn-primary tx-cancel-btn"
+                onClick={onDashboard}
+                style={{ background: '#00e599', color: '#062018', border: 'none', fontWeight: 600 }}
+              >
+                Go to Dashboard →
+              </button>
+            ) : onCancel && (
               <button className="btn-ghost tx-cancel-btn" onClick={onCancel}>
                 {isError ? 'Close' : 'Cancel'}
               </button>
