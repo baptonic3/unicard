@@ -71,7 +71,7 @@ export default function DemoCheckoutPage() {
 
               {/* Order Summary — matches /demo's left sidebar column (330px) */}
               <div className="w-full lg:w-[330px] lg:shrink-0 flex flex-col gap-5">
-                <div className="w-full aspect-square lg:w-[330px] lg:h-[330px] rounded-3xl border border-[rgba(255,255,255,0.16)] shadow-[0_1px_4px_rgba(0,0,0,0.1)] bg-cover bg-center bg-[url('https://i.postimg.cc/TPvzWpB8/event.png')]" />
+                <div className="w-full aspect-square lg:w-[330px] lg:h-[330px] rounded-3xl border border-[rgba(255,255,255,0.16)] shadow-[0_1px_4px_rgba(0,0,0,0.1)] bg-cover bg-center bg-[url('/demo/cover-image.png')]" />
 
                 <div className="flex flex-col gap-2">
                   <div className="text-xl font-medium text-[#210032]">Onchain Rooftop — Builders' Mixer</div>
@@ -144,7 +144,7 @@ export default function DemoCheckoutPage() {
                         </div>
                       )}
                       <span className="text-base font-medium text-[#210032]">
-                        {isProcessing ? 'Generating Session...' : 'Pay with crypto'}
+                        {isProcessing ? 'Redirecting to UniCard...' : 'Pay with crypto'}
                       </span>
                     </button>
 

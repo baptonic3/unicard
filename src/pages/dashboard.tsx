@@ -272,14 +272,25 @@ export default function Dashboard() {
                     </div>
                     <div style={{ display: 'flex', gap: '20px', alignItems: 'center', paddingRight: '16px' }}>
                       {/* existing buttons code here... */}
-                      {[{label: 'Send', icon: <path d="M22 2L11 13M22 2L15 22L11 13L2 9L22 2Z" />, color: '#00e599', iconColor: '#fff'}, 
-                        {label: 'Receive', icon: <path d="M12 5v14M19 12l-7 7-7-7" />, color: '#f1f5f9', iconColor: '#334155'},
-                        {label: 'Add', icon: <path d="M12 5v14M5 12h14" />, color: '#f1f5f9', iconColor: '#334155'},
-                        {label: 'Convert', icon: <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5" />, color: '#f1f5f9', iconColor: '#334155'}
+                      {[{label: 'Send', icon: <path d="M22 2L11 13M22 2L15 22L11 13L2 9L22 2Z" />}, 
+                        {label: 'Receive', icon: <path d="M12 5v14M19 12l-7 7-7-7" />},
+                        {label: 'Add', icon: <path d="M12 5v14M5 12h14" />},
+                        {label: 'Convert', icon: <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5" />}
                       ].map((btn) => (
                         <div key={btn.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
-                          <button style={{ width: '48px', height: '48px', borderRadius: '50%', background: btn.color, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'transform 0.1s' }}>
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={btn.iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{btn.icon}</svg>
+                          <button 
+                            onMouseOver={(e) => {
+                              e.currentTarget.style.background = '#00e599';
+                              const svg = e.currentTarget.querySelector('svg');
+                              if (svg) svg.style.stroke = '#fff';
+                            }}
+                            onMouseOut={(e) => {
+                              e.currentTarget.style.background = '#f1f5f9';
+                              const svg = e.currentTarget.querySelector('svg');
+                              if (svg) svg.style.stroke = '#334155';
+                            }}
+                            style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#f1f5f9', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }}>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#334155" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'stroke 0.2s' }}>{btn.icon}</svg>
                           </button>
                           <span style={{ fontSize: '13px', fontWeight: 500, color: '#64748b' }}>{btn.label}</span>
                         </div>
@@ -332,8 +343,11 @@ export default function Dashboard() {
                           onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                         >
                           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: isDark ? 'rgba(255,255,255,0.06)' : '#f8fafc', border: `1px solid ${t.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+                            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: isDark ? 'rgba(0,229,153,0.1)' : '#e6fcf5', border: `1px solid ${isDark ? '#00e59933' : '#a7f3d0'}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"></path>
+                                <line x1="12" y1="8" y2="16" x2="12" strokeDasharray="2 3"></line>
+                              </svg>
                             </div>
                             <div>
                               <div style={{ fontSize: '15px', fontWeight: 600, marginBottom: '2px', color: t.text }}>Pass Issued</div>

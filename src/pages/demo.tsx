@@ -28,7 +28,7 @@ export default function DemoEventPage() {
 
           {/* Cover Image */}
           <div className="demo-cover">
-            <div className="w-full aspect-square rounded-3xl border border-[rgba(20,20,20,0.04)] bg-cover bg-center bg-[url('https://i.postimg.cc/TPvzWpB8/event.png')]" />
+            <div className="w-full aspect-square rounded-3xl border border-[rgba(20,20,20,0.04)] bg-cover bg-center bg-[url('/demo/cover-image.png')]" />
           </div>
 
           {/* Presenter / Host Info */}

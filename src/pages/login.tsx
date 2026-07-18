@@ -193,7 +193,7 @@ export default function LoginPage() {
                 Get started
               </h2>
               <p style={{ color: '#64748b', fontSize: 14, lineHeight: 1.6 }}>
-                Use your email to sign in or create your account — no wallet or seed phrase needed. UniCard creates one for you.
+                Sign in or create your account — no wallet extensions or seed phrase needed. UniCard creates one for you.
               </p>
             </div>
 
@@ -274,7 +274,7 @@ export default function LoginPage() {
               <p style={{ fontSize: 12, color: '#94a3b8', margin: 0 }}>
                 Powered by <strong style={{ color: '#10b981' }}>Magic</strong> × <strong style={{ color: '#10b981' }}>Particle Network</strong>
               </p>
-              <p style={{ fontSize: 11, color: '#cbd5e1', marginTop: 6 }}>Non-custodial · Your keys, your account.</p>
+              <p style={{ fontSize: 11, color: '#cbd5e1', marginTop: 6 }}>Secure authentication · Seamless cross-chain payments.</p>
             </div>
           </div>
         </div>
@@ -297,9 +297,9 @@ export default function LoginPage() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
               {[
-                { label: 'Magic Email Login', sub: 'No seed phrase, no extension needed' },
-                { label: 'Cross-chain payments', sub: 'Pay with USDC on any chain' },
-                { label: 'EIP-7702 Smart Account', sub: 'Full smart account, standard EOA' },
+                { label: 'Frictionless Auth', sub: 'Email & social login powered by Magic.' },
+                { label: 'Cross-chain payments', sub: 'Spend balances spread across networks in a single transaction without bridging.' },
+                { label: 'EIP-7702 Powered', sub: 'Standard EOAs are seamlessly upgraded to smart accounts.' },
               ].map(f => (
                 <div key={f.label} style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
                   <div style={{ flexShrink: 0, paddingTop: 2 }}>

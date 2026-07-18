@@ -9,7 +9,7 @@ export default function Footer() {
         <div className="lp-footer-brand">
           <Logo height={26} />
           <p className="lp-footer-note">Powered by Particle Network × Magic</p>
-          <p className="lp-footer-note">Non-custodial · Your keys, your account.</p>
+          <p className="lp-footer-note">No seed phrases. No friction.</p>
         </div>
 
         <div className="lp-footer-col">
@@ -37,7 +37,7 @@ export default function Footer() {
 
       <div className="lp-footer-bottom">
         <span>© 2026 UniCard</span>
-        <span>Built for seamless Web3 experience</span>
+        <span>The chain-abstracted checkout engine</span>
       </div>
 
       <style jsx>{`

@@ -19,64 +19,64 @@ export const PERSONAS: Record<Persona, PersonaContent> = {
   personal: {
     heroTitle: ['Your universal', 'crypto wallet'],
     heroSub:
-      'Pay for anything with any token — UniCard handles cross-chain routing automatically. One balance, every chain.',
+      'Pay for anything with any token — UniCard handles cross-chain routing automatically. One balance, any chain.',
     videoLabel: 'Demo recording · 2:14',
     videoSrc: '/videos/wallet-demo.mp4',
     stepsTitle: 'The easiest way to pay with crypto',
     stepsSub:
-      'Sign in with your email, pay with assets on any supported chain, and access your purchase in seconds.',
+      'Sign in with a passwordless method, pay with assets on any supported chain, and access your purchase in seconds.',
     steps: [
       {
-        title: 'Sign in with Email',
+        title: 'Passwordless Sign-In',
         description:
-          'Use your email to get started. No wallet setup, passwords, or recovery phrases.',
+          'Login with your email or social accounts. No seed phrases, browser extensions, or passwords required.',
       },
       {
-        title: 'Universal Account',
+        title: 'Unified Cross-Chain Balance',
         description:
-          "Your account is prepared automatically — you don't need to configure anything.",
+          'Your wallet upgrades seamlessly via EIP-7702. We aggregate your balances across all networks into a single balance, without migrating your address.',
       },
       {
         title: 'Pay with Any Asset',
         description:
-          'Pay using the crypto you already have. We handle routing, swaps, and settlement automatically.',
+          'Use the crypto you already hold. We handle cross-chain routing, token swaps, and gas abstraction automatically in the background.',
       },
       {
-        title: 'Access Your Purchase',
+        title: 'Instant On-chain Access',
         description:
-          'Your payment settles securely, and your purchase is delivered instantly.',
+          'Your payment executes in seconds, and a verifiable on-chain receipt (Pass) is automatically minted directly to your wallet.',
       },
     ],
   },
   business: {
     heroTitle: ['Accept any token.', 'Settle on Arbitrum.'],
     heroSub:
-      'The chain-abstracted checkout engine — customers pay with any asset on any chain, you settle in USDC on Arbitrum.',
+      'The chain-abstracted checkout engine — customers pay with any asset on any chain, you receive USDC on Arbitrum.',
     videoLabel: 'Checkout demo · 1:48',
     videoSrc: '/videos/checkout-demo.mp4',
     stepsTitle: 'The Stripe checkout of Web3',
     stepsSub:
-      'Integrate UniCard in minutes. Your buyers pay with any asset on any chain. You receive USDC on Arbitrum with full on-chain proof.',
+      'Integrate UniCard in minutes. Let customers pay with any asset on any chain, while you receive USDC on Arbitrum with instant on-chain receipts.',
     steps: [
       {
-        title: 'List your item',
+        title: 'API Integration',
         description:
-          'Add your event, membership, or digital product — we give you a shareable UniCard checkout URL.',
+          'Create a checkout session with one simple POST request—just like Stripe. No smart contracts to write, audit, or deploy.',
       },
       {
-        title: 'Buyer clicks your link',
+        title: 'Frictionless Buyer Experience',
         description:
-          'They land on our checkout page pre-loaded with your item. We handle login, wallet creation, and payment.',
+          'Redirect users to a secure UniCard checkout page. We handle the passwordless login and smart-account upgrades instantly.',
       },
       {
-        title: 'They pay from any chain',
+        title: 'Cross-Chain Payment Routing',
         description:
-          'USDC on Base, ETH on Mainnet, USDT on Polygon — Particle Universal Accounts route and settle automatically.',
+          'Buyers pay efficiently with any asset across any supported chain. Particle Universal Accounts route all funds automatically.',
       },
       {
-        title: 'You get USDC + on-chain proof',
+        title: 'Instant Webhooks & Settlement',
         description:
-          'Settlement arrives on Arbitrum One. Buyer gets a verifiable pass. You get an Arbiscan receipt.',
+          'Our backend fires an instant webhook on success. Payments settle securely as USDC in the platform treasury on Arbitrum, while the buyer receives a verifiable on-chain Pass.',
       },
     ],
   },
@@ -99,9 +99,9 @@ export const FAQ_ITEMS: FaqItem[] = [
       'You can pay from any chain supported by Particle Universal Accounts — including Ethereum Mainnet, Arbitrum, Base, Polygon, and Solana — using major assets like USDC, USDT, ETH, and SOL. Whatever you pay with, settlement always arrives as USDC on Arbitrum One.',
   },
   {
-    question: 'Who holds my keys?',
+    question: 'How is my wallet secured without a seed phrase?',
     answer:
-      "You do. UniCard is non-custodial: your wallet is created by Magic and tied to your Google, Apple, or email login. Neither UniCard nor the seller can access or move your funds — and the EIP-7702 upgrade doesn't change that.",
+      "There are no private keys or seed phrases to manage! Your wallet is securely generated by Magic Auth and tied directly to your email or social login. Neither UniCard nor the seller has access to your account—you are the only one who can authorize payments, and the EIP-7702 upgrade doesn't change that.",
   },
   {
     question: 'How does cross-chain routing work?',
@@ -111,11 +111,11 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: 'What does settling in USDC on Arbitrum mean for merchants?',
     answer:
-      'You always receive a single asset on a single chain — USDC on Arbitrum One — no matter what your buyer paid with. That means no exposure to volatile tokens, one treasury to manage, and every settlement comes with a webhook and an Arbiscan-verifiable on-chain receipt.',
+      'Your funds always settle as a single asset on a single chain — USDC on Arbitrum One — no matter what your buyer paid with. That means no exposure to volatile tokens, one treasury to manage, and every settlement comes with a webhook and an Arbiscan-verifiable on-chain receipt.',
   },
-  {
-    question: 'Do I need gas tokens on every chain?',
-    answer:
-      'No. Gas is abstracted away by the Universal Account — network fees are covered from the payment itself, so you never need to top up ETH, SOL, or any other gas token on any chain.',
-  },
+  // {
+  //   question: 'Do I need gas on every chain?',
+  //   answer:
+  //     'No. Gas is abstracted away by the Universal Account — network fees are covered from the payment itself, so you never need to top up ETH, SOL, or any other gas token on any chain.',
+  // },
 ];

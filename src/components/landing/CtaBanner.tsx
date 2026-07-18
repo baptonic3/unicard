@@ -7,7 +7,7 @@ export default function CtaBanner() {
       <div className="lp-cta-card">
         <h2 className="lp-cta-title">Ready to try UniCard?</h2>
         <p className="lp-cta-sub">
-          One balance, every chain. Create your wallet in seconds — or see it in action first.
+          One balance, any chain. Create your wallet in seconds — or see it in action first.
         </p>
         <div className="lp-cta-buttons">
           <Link href={CREATE_WALLET_PATH} className="lp-btn lp-btn-primary">Create wallet</Link>

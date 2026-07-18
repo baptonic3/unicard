@@ -34,13 +34,13 @@ export default function Home() {
         <title>UniCard | Universal Crypto Checkout</title>
         <meta
           name="description"
-          content="Pay for anything with any token — UniCard handles cross-chain routing automatically. Businesses accept any asset on any chain and settle in USDC on Arbitrum."
+          content="Pay for anything with any token — UniCard handles cross-chain routing automatically. Businesses accept any asset on any chain and receive settlement in USDC on Arbitrum."
         />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta property="og:title" content="UniCard | Universal Crypto Checkout" />
         <meta
           property="og:description"
-          content="One balance, every chain. The chain-abstracted wallet and checkout engine."
+          content="One balance, any chain. The chain-abstracted wallet and checkout engine."
         />
         <meta property="og:type" content="website" />
       </Head>

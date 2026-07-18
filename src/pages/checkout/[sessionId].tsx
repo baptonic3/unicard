@@ -50,15 +50,30 @@ const LIGHT = {
 export default function CheckoutPage({ session, item }: CheckoutPageProps) {
   const router = useRouter();
   const { token, setToken } = useMagic();
-  const { accountInfo, primaryAssets, isDelegated } = useUniversalAccount();
+  const { accountInfo, primaryAssets, isDelegated, ensureDelegated, undelegate } = useUniversalAccount();
   const address = accountInfo?.ownerAddress || '';
   const evmSmartAccount = accountInfo?.evmSmartAccount || '';
   const solanaSmartAccount = accountInfo?.solanaSmartAccount || '';
   const primaryBalance = Number(primaryAssets?.totalAmountInUSD ?? 0).toFixed(2);
   const [mounted, setMounted] = useState(false);
+  const [delegationLoading, setDelegationLoading] = useState(false);
   const [purchaseResult, setPurchaseResult] = useState<{
     passId: number; arbTxHash: string; particleTxId: string;
   } | null>(null);
+  const [redirectTimer, setRedirectTimer] = useState(13);
+
+  const handleToggleDelegation = async () => {
+    if (delegationLoading) return;
+    setDelegationLoading(true);
+    try {
+      if (isDelegated) await undelegate();
+      else await ensureDelegated();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setDelegationLoading(false);
+    }
+  };
 
   const { display: timerDisplay, expired: sessionExpired } = useCountdown(session.expiresAt);
   const hasEnough = Number(primaryAssets?.totalAmountInUSD ?? 0) >= item.priceUSDC;
@@ -80,6 +95,27 @@ export default function CheckoutPage({ session, item }: CheckoutPageProps) {
   const handleSuccess = (passId: number, particleTxId?: string, arbTxHash?: string) => {
     setPurchaseResult({ passId, arbTxHash: arbTxHash || '', particleTxId: particleTxId || '' });
   };
+
+  // Handle countdown and auto-redirect when purchaseResult exists
+  useEffect(() => {
+    if (purchaseResult) {
+      if (redirectTimer > 0) {
+        const timer = setTimeout(() => setRedirectTimer(prev => prev - 1), 1000);
+        return () => clearTimeout(timer);
+      } else {
+        const successHref = (() => {
+          try {
+            const url = new URL(session.successUrl);
+            url.searchParams.set('session_id', session.id);
+            url.searchParams.set('pass_id', String(purchaseResult.passId));
+            url.searchParams.set('status', 'success');
+            return url.toString();
+          } catch { return session.successUrl; }
+        })();
+        window.location.href = successHref;
+      }
+    }
+  }, [purchaseResult, redirectTimer, session]);
 
   if (!mounted) return null;
 
@@ -137,6 +173,9 @@ export default function CheckoutPage({ session, item }: CheckoutPageProps) {
 
           {/* CTAs */}
           <div style={{ marginTop: 28, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
+            <div style={{ fontSize: 13, color: '#64748b', fontWeight: 500 }}>
+              Redirecting to the store in {redirectTimer}s...
+            </div>
             <a
               href={successHref}
               style={{
@@ -147,11 +186,11 @@ export default function CheckoutPage({ session, item }: CheckoutPageProps) {
                 transition: 'opacity 0.2s',
               }}
             >
-              Return to checkout →
+              Return to store →
             </a>
-            <Link href="/dashboard" style={{ fontSize: 14, color: '#64748b', textDecoration: 'none', fontWeight: 500 }}>
+            {/* <Link href="/dashboard" style={{ fontSize: 14, color: '#64748b', textDecoration: 'none', fontWeight: 500 }}>
               View in my wallet →
-            </Link>
+            </Link> */}
           </div>
         </div>
       </div>
@@ -221,45 +260,52 @@ export default function CheckoutPage({ session, item }: CheckoutPageProps) {
             marginBottom: 32,
             transition: 'background 0.25s, border-color 0.25s',
           }}>
-            {/* Status row */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: 20, padding: '5px 12px' }}>
-                <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#f97316', flexShrink: 0 }} />
-                <span style={{ fontSize: 12, fontWeight: 600, color: '#c2410c' }}>Pending payment</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: sessionExpired ? '#ef4444' : t.subtext, fontSize: 13 }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                {sessionExpired
-                  ? 'Session expired'
-                  : `Reserved · ${timerDisplay} left`
-                }
-              </div>
-            </div>
-
-            {/* Event row */}
-            <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
+            {/* Event row (Side-by-side Image 2 Layout) */}
+            <div style={{ display: 'flex', gap: 32, alignItems: 'stretch' }}>
               {/* Event image */}
               {item.imageUrl && (
                 <img
                   src={item.imageUrl}
                   alt={item.title}
-                  style={{ width: 180, height: 180, borderRadius: 12, objectFit: 'cover', flexShrink: 0 }}
+                  style={{ width: 280, height: 280, borderRadius: 16, objectFit: 'cover', flexShrink: 0, border: '1px solid #e2e8f0' }}
                 />
               )}
 
               {/* Event details */}
-              <div style={{ flex: 1 }}>
-                <h2 style={{ fontSize: 20, fontWeight: 700, color: t.text, marginBottom: 4, lineHeight: 1.3 }}>{item.title}</h2>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                
+                {/* Status row */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#fff7ed', borderRadius: 20, padding: '5px 12px' }}>
+                    <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#f97316', flexShrink: 0 }} />
+                    <span style={{ fontSize: 13, fontWeight: 600, color: '#c2410c' }}>Pending payment</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: sessionExpired ? '#ef4444' : t.subtext, fontSize: 13 }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    {sessionExpired
+                      ? 'Session expired'
+                      : `Reserved · ${timerDisplay} left`
+                    }
+                  </div>
+                </div>
+
+                <h2 style={{ fontSize: 28, fontWeight: 700, color: t.text, marginBottom: 8, letterSpacing: '-0.02em', lineHeight: 1.2 }}>{item.title}</h2>
+                
                 {item.description && (
-                  <p style={{ fontSize: 13, color: t.subtext, marginBottom: 12, lineHeight: 1.5 }}>{item.description}</p>
+                  <p style={{ fontSize: 15, color: t.subtext, marginBottom: 16, lineHeight: 1.5 }}>{item.description}</p>
                 )}
-                {/* Price row — no fee */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, borderTop: `1px solid ${t.border}`, paddingTop: 12, marginTop: 8 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
+                
+                {/* <a href="#" style={{ fontSize: 14, fontWeight: 600, color: '#10b981', textDecoration: 'none', marginBottom: 'auto' }}>
+                  View on lu.ma/ethglobal ↗
+                </a> */}
+
+                {/* Price row */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, borderTop: `1px solid ${t.border}`, paddingTop: 16, marginTop: 24 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 15 }}>
                     <span style={{ color: t.subtext }}>Price</span>
                     <span style={{ color: t.text, fontWeight: 500 }}>${item.priceUSDC.toFixed(2)}</span>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 15, fontWeight: 700, marginTop: 5 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 20, fontWeight: 700, marginTop: 4 }}>
                     <span style={{ color: t.text }}>Total</span>
                     <span style={{ color: t.text }}>${item.priceUSDC.toFixed(2)}</span>
                   </div>
@@ -281,11 +327,26 @@ export default function CheckoutPage({ session, item }: CheckoutPageProps) {
             <div style={{ display: 'flex', gap: 12, marginTop: !hasEnough && !sessionExpired ? 12 : 20 }}>
               <a
                 href={session.cancelUrl}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.background = '#f8fafc';
+                  e.currentTarget.style.borderColor = '#cbd5e1';
+                  e.currentTarget.style.color = '#334155';
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                  e.currentTarget.style.boxShadow = '0 2px 5px rgba(0,0,0,0.03)';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.background = '#fff';
+                  e.currentTarget.style.borderColor = t.border;
+                  e.currentTarget.style.color = t.subtext;
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
                 style={{
-                  flex: 1, padding: '13px 0', textAlign: 'center', borderRadius: 12,
-                  border: `1px solid ${t.border}`, color: t.subtext, fontSize: 15, fontWeight: 600,
-                  textDecoration: 'none', background: 'transparent', cursor: 'pointer',
-                  transition: 'background 0.15s',
+                  flex: 1, padding: '14px 0', borderRadius: 14, margin: '0 0 0.5rem 0',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  border: `1px solid ${t.border}`, color: t.subtext, fontSize: 16, fontWeight: 600,
+                  textDecoration: 'none', background: '#fff', cursor: 'pointer',
+                  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                 }}
               >
                 Cancel
@@ -317,17 +378,81 @@ export default function CheckoutPage({ session, item }: CheckoutPageProps) {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
 
             {/* Universal Balance */}
-            <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: 20, padding: 24, boxShadow: t.cardShadow }}>
+            {/* Universal Balance */}
+            <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: 20, padding: 24, boxShadow: t.cardShadow, display: 'flex', flexDirection: 'column', alignSelf: 'start' }}>
               <div style={{ fontSize: 13, fontWeight: 600, color: t.subtext, marginBottom: 8 }}>Universal Balance</div>
-              <div style={{ fontSize: 48, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1, marginBottom: 6, color: t.text }}>
-                ${primaryBalance}
+              
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+                <div style={{ fontSize: 48, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1, color: t.text }}>
+                  ${primaryBalance}
+                </div>
+                <svg width="150" height="40" viewBox="0 0 120 40" fill="none" preserveAspectRatio="none">
+                  <path d="M0 32L15 28L30 34L50 20L65 26L85 14L105 18L120 8" stroke="#00e599" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
               </div>
-              <div style={{ fontSize: 13, color: t.subtext }}>across all chains</div>
-              <svg style={{ marginTop: 16, display: 'block' }} width="100%" height="32" viewBox="0 0 200 32" fill="none" preserveAspectRatio="none">
-                <path d="M0 28L25 24L45 30L65 18L85 22L105 14L125 18L145 10L165 12L185 5L200 6" stroke="#00e599" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
+              <div style={{ fontSize: 13, color: t.subtext, marginTop: 6 }}>across all chains</div>
 
+              {/* Delegated Toggle */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: `1px solid ${t.border}`, marginTop: 24, paddingTop: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00e599" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <h3 style={{ fontSize: '14px', fontWeight: 700, color: t.text, lineHeight: 1.2 }}>EIP-7702 Delegation</h3>
+                      <div 
+                        style={{ position: 'relative', display: 'flex', alignItems: 'center', cursor: 'pointer' }}
+                        onMouseOver={(e) => {
+                           const tooltip = e.currentTarget.querySelector('.tooltip-popup') as HTMLElement;
+                           if (tooltip) { tooltip.style.opacity = '1'; tooltip.style.transform = 'translate(-50%, -8px)'; tooltip.style.visibility = 'visible'; }
+                        }}
+                        onMouseOut={(e) => {
+                           const tooltip = e.currentTarget.querySelector('.tooltip-popup') as HTMLElement;
+                           if (tooltip) { tooltip.style.opacity = '0'; tooltip.style.transform = 'translate(-50%, 0px)'; tooltip.style.visibility = 'hidden'; }
+                        }}
+                      >
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                        <div 
+                          className="tooltip-popup"
+                          style={{
+                            position: 'absolute', bottom: '100%', left: '50%', transform: 'translate(-50%, 0)', visibility: 'hidden',
+                            width: 290, padding: 14, borderRadius: 10, background: '#27272a', color: '#f8fafc',
+                            fontSize: 13, lineHeight: 1.5, fontWeight: 400, opacity: 0, transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)', zIndex: 10, pointerEvents: 'none',
+                            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
+                          }}
+                        >
+                          Enables smart-account features for cross-chain payments while keeping your existing wallet address. Pay from any supported chain without switching networks—you remain in control and approve every transaction.
+                          <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', borderWidth: 6, borderStyle: 'solid', borderColor: '#27272a transparent transparent transparent' }} />
+                        </div>
+                      </div>
+                    </div>
+                    {/* <span style={{ fontSize: '13px', color: t.subtext, marginTop: 2 }}>Pay from EOA directly</span> */}
+                  </div>
+                </div>
+                  
+                  {/* Toggle Switch */}
+                  <div 
+                    style={{ 
+                      display: 'flex', alignItems: 'center', gap: '8px', 
+                      cursor: delegationLoading ? 'not-allowed' : 'pointer', 
+                      opacity: delegationLoading ? 0.8 : 1,
+                      transform: delegationLoading ? 'scale(0.96)' : 'scale(1)',
+                      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+                    }} 
+                    onClick={handleToggleDelegation}
+                  >
+                    <span style={{ fontSize: '13px', fontWeight: 600, color: isDelegated ? '#00e599' : t.subtext, transition: 'color 0.2s' }}>{isDelegated ? 'On' : 'Off'}</span>
+                    <div style={{ width: '40px', height: '24px', background: delegationLoading ? '#94a3b8' : (isDelegated ? '#00e599' : '#cbd5e1'), borderRadius: '12px', position: 'relative', transition: 'background 0.3s' }}>
+                      <div style={{ width: '20px', height: '20px', background: '#fff', borderRadius: '50%', position: 'absolute', top: '2px', left: isDelegated ? '18px' : '2px', transition: 'left 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {delegationLoading && (
+                          <div style={{ width: '12px', height: '12px', border: '2px solid rgba(0,0,0,0.1)', borderTopColor: '#64748b', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             {/* UnifiedBalanceCard overriding EIP-7702 Delegation */}
             <UnifiedBalanceCard />
           </div>
