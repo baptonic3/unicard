@@ -303,7 +303,7 @@ export default function CheckoutPage({ session, item }: CheckoutPageProps) {
             {!hasEnough && !sessionExpired && (
               <div style={{ marginTop: 20, color: '#b45309', fontSize: 13, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path fill-rule="evenodd" clip-rule="evenodd" d="M8.00004 2L1.33337 13.3333H14.6667L8.00004 2ZM7.33337 6H8.66671V10H7.33337V6ZM7.33337 11.3333H8.66671V12.6667H7.33337V11.3333Z" fill="#9A5410"/>
+                  <path fillRule="evenodd" clipRule="evenodd" d="M8.00004 2L1.33337 13.3333H14.6667L8.00004 2ZM7.33337 6H8.66671V10H7.33337V6ZM7.33337 11.3333H8.66671V12.6667H7.33337V11.3333Z" fill="#9A5410"/>
                 </svg>
                 Insufficient balance — add ${item.priceUSDC.toFixed(2)} to your balance to pay
               </div>
