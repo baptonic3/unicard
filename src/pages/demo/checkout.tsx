@@ -12,7 +12,7 @@ export default function DemoCheckoutPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          itemSlug: 'arbitrum-hackathon-uxmaxx', // Note: will change this later
+          itemSlug: 'onchain-rooftop-mixer', 
           successUrl: `${window.location.origin}/demo?success=true`,
           cancelUrl: `${window.location.origin}/demo/checkout`,
         }),

@@ -23,9 +23,11 @@ type UAContextType = {
   universalAccount: UniversalAccount | null;
   accountInfo: AccountInfo;
   primaryAssets: IAssetsResponse | null;
-  isDelegated: boolean;
+  delegatedChains: number[];
   refreshBalance: () => Promise<void>;
+  refreshDelegationStatus: () => Promise<void>;
   ensureDelegated: () => Promise<void>;
+  delegateOnChain: (chainId: number) => Promise<void>;
   undelegate: () => Promise<void>;
   signAndSend: (transaction: { rootHash: string } & Record<string, any>) => Promise<{ transactionId: string }>;
   loading: boolean;
@@ -35,9 +37,11 @@ const UAContext = createContext<UAContextType>({
   universalAccount: null,
   accountInfo: { ownerAddress: '', evmSmartAccount: '', solanaSmartAccount: '' },
   primaryAssets: null,
-  isDelegated: false,
+  delegatedChains: [],
   refreshBalance: async () => {},
+  refreshDelegationStatus: async () => {},
   ensureDelegated: async () => {},
+  delegateOnChain: async () => {},
   undelegate: async () => {},
   signAndSend: async () => ({ transactionId: '' }),
   loading: false,
@@ -54,7 +58,7 @@ export const UniversalAccountProvider = ({ children }: { children: ReactNode }) 
     solanaSmartAccount: '',
   });
   const [primaryAssets, setPrimaryAssets] = useState<IAssetsResponse | null>(null);
-  const [isDelegated, setIsDelegated] = useState(false);
+  const [delegatedChains, setDelegatedChains] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
 
   const userAddress = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
@@ -86,15 +90,17 @@ export const UniversalAccountProvider = ({ children }: { children: ReactNode }) 
     setUniversalAccount(ua);
   }, [userAddress]);
 
-  // Check delegation status on Arbitrum
+  // Check delegation status on all chains
   const refreshDelegationStatus = useCallback(async () => {
     if (!universalAccount) return;
     try {
       const deployments = await universalAccount.getEIP7702Deployments();
-      const arb = deployments.find((d: any) => d.chainId === ARBITRUM_CHAIN_ID);
-      const delegated = (arb as any)?.isDelegated ?? false;
-      setIsDelegated(delegated);
-      console.log('🔷 Delegation status on Arbitrum:', delegated ? '✅ Active' : '❌ Not delegated');
+      const activeChains = deployments
+        .filter((d: any) => d.isDelegated)
+        .map((d: any) => d.chainId);
+      
+      setDelegatedChains(activeChains);
+      console.log('🔷 Delegated chains:', activeChains);
     } catch (err) {
       console.error('Failed to check delegation status:', err);
     }
@@ -203,6 +209,43 @@ export const UniversalAccountProvider = ({ children }: { children: ReactNode }) 
     await submit7702Delegation((auth) => auth.address);
   }, [universalAccount, refreshDelegationStatus, submit7702Delegation]);
 
+  // Pre-delegate the EOA on any chain — generalised version of ensureDelegated.
+  // Called by BuyPassButton BEFORE createUniversalTransaction so that all source
+  // chains are already delegated and the tx has no inline 7702 auth entries.
+  const delegateOnChain = useCallback(
+    async (chainId: number) => {
+      if (!universalAccount || !magic || !userAddress) {
+        throw new Error('Universal Account or wallet not ready');
+      }
+
+      const deployments = await universalAccount.getEIP7702Deployments();
+      const existing = deployments.find((d: any) => d.chainId === chainId);
+      if ((existing as any)?.isDelegated) {
+        console.log('🔷 Chain', chainId, 'already delegated — skipping');
+        return;
+      }
+
+      console.log('🔷 Delegating EOA on chain', chainId, '...');
+      await magic.evm.switchChain(chainId);
+
+      const [auth] = await universalAccount.getEIP7702Auth([chainId]);
+      const authorization = await signEip7702Auth(
+        auth.address,
+        chainId,
+        auth.nonce + 1, // same pattern as ensureDelegated (working)
+      );
+
+      await magic.wallet.send7702Transaction({
+        to: userAddress,
+        data: '0x',
+        authorizationList: [authorization],
+      });
+      console.log('🔷 Chain', chainId, 'delegated! Restoring Arbitrum...');
+      await magic.evm.switchChain(ARBITRUM_CHAIN_ID);
+    },
+    [universalAccount, magic, userAddress, signEip7702Auth],
+  );
+
   // Revert EOA on Arbitrum to plain EOA (delegate to zero address)
   const undelegate = useCallback(async () => {
     if (!universalAccount) {
@@ -220,65 +263,29 @@ export const UniversalAccountProvider = ({ children }: { children: ReactNode }) 
     await submit7702Delegation(() => ZERO_ADDRESS);
   }, [universalAccount, refreshDelegationStatus, submit7702Delegation]);
 
-  // Sign rootHash + handle inline 7702 authorizations + broadcast
+  // Sign rootHash and broadcast. BuyPassButton pre-delegates all source chains
+  // before calling this, so there are no inline 7702 auth entries in the transaction.
   const signAndSend = useCallback(
     async (transaction: { rootHash: string; userOps?: any[] } & Record<string, any>) => {
       if (!universalAccount || !magic || !userAddress) {
         throw new Error('Universal Account or wallet not ready');
       }
 
-      // Handle inline 7702 auth for any undelegated chains
-      type EIP7702Authorization = { userOpHash: string; signature: string };
-      const authorizations: EIP7702Authorization[] = [];
-      const nonceMap = new Map<number, string>();
-
-      if (transaction.userOps) {
-        for (const userOp of transaction.userOps) {
-          if (userOp.eip7702Auth && !userOp.eip7702Delegated) {
-            let signatureSerialized = nonceMap.get(userOp.eip7702Auth.nonce);
-
-            if (!signatureSerialized) {
-              const authorization = await signEip7702Auth(
-                userOp.eip7702Auth.address,
-                userOp.eip7702Auth.chainId || userOp.chainId,
-                userOp.eip7702Auth.nonce,
-              );
-
-              const sig = Signature.from({
-                r: authorization.r,
-                s: authorization.s,
-                v: authorization.v,
-              });
-              signatureSerialized = sig.serialized;
-              nonceMap.set(userOp.eip7702Auth.nonce, signatureSerialized);
-            }
-
-            if (signatureSerialized) {
-              authorizations.push({
-                userOpHash: userOp.userOpHash,
-                signature: signatureSerialized,
-              });
-            }
-          }
-        }
-      }
-
-      // Sign the rootHash with Magic's BrowserProvider
       const provider = new BrowserProvider((magic as any).rpcProvider);
       const signer = await provider.getSigner();
+      const signerAddr = await signer.getAddress();
+      console.log('🔷 Signer:', signerAddr, '| owner:', userAddress, '| match:', signerAddr.toLowerCase() === userAddress.toLowerCase());
+      console.log('🔷 userOps:', transaction.userOps?.length ?? 0, '| rootHash:', transaction.rootHash);
+
       const signature = await signer.signMessage(getBytes(transaction.rootHash));
 
       console.log('🔷 Sending transaction via UA SDK...');
-      const result = await universalAccount.sendTransaction(
-        transaction as any,
-        signature,
-        authorizations.length > 0 ? authorizations : undefined,
-      );
+      const result = await universalAccount.sendTransaction(transaction as any, signature);
 
       console.log('🔷 Transaction sent! ID:', result.transactionId);
       return result;
     },
-    [universalAccount, magic, userAddress, signEip7702Auth],
+    [universalAccount, magic, userAddress],
   );
 
   const value = useMemo(
@@ -286,14 +293,16 @@ export const UniversalAccountProvider = ({ children }: { children: ReactNode }) 
       universalAccount,
       accountInfo,
       primaryAssets,
-      isDelegated,
+      delegatedChains,
       refreshBalance,
+      refreshDelegationStatus,
       ensureDelegated,
+      delegateOnChain,
       undelegate,
       signAndSend,
       loading,
     }),
-    [universalAccount, accountInfo, primaryAssets, isDelegated, refreshBalance, ensureDelegated, undelegate, signAndSend, loading],
+    [universalAccount, accountInfo, primaryAssets, delegatedChains, refreshBalance, refreshDelegationStatus, ensureDelegated, delegateOnChain, undelegate, signAndSend, loading],
   );
 
   return <UAContext.Provider value={value}>{children}</UAContext.Provider>;

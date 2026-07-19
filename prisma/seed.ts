@@ -14,7 +14,7 @@ async function main() {
       slug: 'onchain-rooftop-mixer',
       title: "Onchain Rooftop — Builders' Mixer",
       description: 'Wed, Jul 22 · 5:00–9:00 PM · StartDock Coworking, Amsterdam',
-      imageUrl: 'https://i.postimg.cc/TPvzWpB8/event.png',
+      imageUrl: '/demo/cover-image.png',
       priceUSDC: 5,
       chainItemId: null,
       active: true,

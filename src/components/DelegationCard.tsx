@@ -3,8 +3,7 @@ import { truncateAddress } from '@/utils/common';
 import { useState } from 'react';
 
 const DelegationCard = () => {
-  const { accountInfo, isDelegated, ensureDelegated, undelegate, loading } = useUniversalAccount();
-  const [actionLoading, setActionLoading] = useState(false);
+  const { accountInfo, delegatedChains, loading } = useUniversalAccount();
   const [error, setError] = useState('');
 
   // Hardcoded Theme matching the dashboard Light mode
@@ -16,25 +15,6 @@ const DelegationCard = () => {
     cardShadow: '0 2px 4px rgba(0,0,0,0.02)'
   };
 
-  const handleToggle = async () => {
-    if (actionLoading) return;
-    setError('');
-    setActionLoading(true);
-    
-    try {
-      if (isDelegated) {
-        await undelegate();
-      } else {
-        await ensureDelegated();
-      }
-    } catch (err: any) {
-      console.error('Delegation toggle failed:', err);
-      setError(err?.message || 'Action failed');
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
   if (loading && !accountInfo.ownerAddress) {
     return (
       <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: '24px', padding: '24px', boxShadow: t.cardShadow }}>
@@ -43,19 +23,31 @@ const DelegationCard = () => {
     );
   }
 
+  const chainIdToName = (id: number) => {
+    switch (id) {
+      case 42161: return 'Arbitrum';
+      case 8453: return 'Base';
+      case 1: return 'Ethereum';
+      case 10: return 'Optimism';
+      case 137: return 'Polygon';
+      case 56: return 'BNB Chain';
+      default: return `Chain ${id}`;
+    }
+  };
+
+  const delegatedNames = delegatedChains.length > 0 
+    ? delegatedChains.map(id => chainIdToName(id)).join(', ')
+    : 'None (Delegates automatically on purchase)';
+
   return (
     <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: '24px', padding: '24px', boxShadow: t.cardShadow }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', borderBottom: `1px solid ${t.border}`, paddingBottom: '16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {actionLoading ? (
-               <div style={{ width: '12px', height: '12px', border: '2px solid rgba(0, 229, 153, 0.2)', borderTopColor: '#00e599', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-            ) : (
-               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00e599" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-            )}
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00e599" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <h3 style={{ fontSize: '16px', fontWeight: 700, color: t.text }}>EIP-7702 Delegation</h3>
+            <h3 style={{ fontSize: '16px', fontWeight: 700, color: t.text }}>EIP-7702 Account</h3>
             <div 
               style={{ position: 'relative', display: 'flex', alignItems: 'center', cursor: 'pointer' }}
               onMouseOver={(e) => {
@@ -77,34 +69,16 @@ const DelegationCard = () => {
                   boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
                 }}
               >
-                Enables smart-account features for cross-chain payments while keeping your existing wallet address. Pay from any supported chain without switching networks—you remain in control and approve every transaction.
+                Enables smart-account features for cross-chain payments while keeping your existing wallet address. Your EOA automatically delegates (JIT) on source chains when you make a purchase.
                 <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', borderWidth: 6, borderStyle: 'solid', borderColor: '#27272a transparent transparent transparent' }} />
               </div>
             </div>
           </div>
         </div>
         
-        {/* Toggle Switch */}
-        <div 
-          style={{ 
-             display: 'flex', 
-             alignItems: 'center', 
-             gap: '8px', 
-             cursor: actionLoading ? 'not-allowed' : 'pointer', 
-             opacity: actionLoading ? 0.8 : 1,
-             transform: actionLoading ? 'scale(0.96)' : 'scale(1)',
-             transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
-          }} 
-          onClick={handleToggle}
-        >
-          <span style={{ fontSize: '13px', fontWeight: 600, color: isDelegated ? '#00e599' : t.subtext, transition: 'color 0.2s' }}>{isDelegated ? 'Delegated' : 'Not Delegated'}</span>
-          <div style={{ width: '40px', height: '24px', background: actionLoading ? '#94a3b8' : (isDelegated ? '#00e599' : '#cbd5e1'), borderRadius: '12px', position: 'relative', transition: 'background 0.3s' }}>
-            <div style={{ width: '20px', height: '20px', background: '#fff', borderRadius: '50%', position: 'absolute', top: '2px', left: isDelegated ? '18px' : '2px', transition: 'left 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-               {actionLoading && (
-                 <div style={{ width: '12px', height: '12px', border: '2px solid rgba(0,0,0,0.1)', borderTopColor: '#64748b', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-               )}
-            </div>
-          </div>
+        {/* Status Pill */}
+        <div style={{ display: 'flex', alignItems: 'center', background: '#f0fdf4', padding: '4px 10px', borderRadius: '12px', border: '1px solid #bbf7d0' }}>
+          <span style={{ fontSize: '12px', fontWeight: 600, color: '#15803d' }}>Auto-delegating</span>
         </div>
       </div>
       
@@ -113,8 +87,8 @@ const DelegationCard = () => {
           { label: 'Your EOA', value: accountInfo ? truncateAddress(accountInfo.ownerAddress || '') : 'Loading...', copyValue: accountInfo?.ownerAddress },
           { label: 'EVM UA', value: accountInfo ? truncateAddress(accountInfo.evmSmartAccount) : 'Loading...', copyValue: accountInfo?.evmSmartAccount },
           { label: 'Solana UA', value: accountInfo ? truncateAddress(accountInfo.solanaSmartAccount) : 'Loading...', copyValue: accountInfo?.solanaSmartAccount },
-          { label: 'Chain', value: 'Arbitrum • 42161', bold: true },
-          { label: 'Mode', value: 'EIP-7702 Inline', bold: true }
+          { label: 'Delegated Chains', value: delegatedNames, bold: true },
+          { label: 'Settlement', value: 'Arbitrum • 42161', bold: true }
         ].map((row, i) => (
           <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '14px', color: t.subtext }}>{row.label}</span>
@@ -134,7 +108,7 @@ const DelegationCard = () => {
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                 </button>
               )}
-              <span style={{ fontSize: '14px', fontWeight: row.bold ? 600 : 500, color: t.text, fontFamily: row.bold ? 'inherit' : 'monospace' }}>{row.value || '—'}</span>
+              <span style={{ fontSize: '14px', fontWeight: row.bold ? 600 : 500, color: t.text, fontFamily: row.bold ? 'inherit' : 'monospace', maxWidth: '180px', textAlign: 'right', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{row.value || '—'}</span>
             </div>
           </div>
         ))}

@@ -39,6 +39,16 @@ const MagicProvider = ({ children }: { children: ReactNode }) => {
               chainId: 42161,
               default: true,
             },
+            // Base — Particle UA may source funds here
+            { rpcUrl: 'https://mainnet.base.org', chainId: 8453 },
+            // Ethereum mainnet
+            { rpcUrl: 'https://ethereum-rpc.publicnode.com', chainId: 1 },
+            // Optimism
+            { rpcUrl: 'https://mainnet.optimism.io', chainId: 10 },
+            // Polygon
+            { rpcUrl: 'https://polygon-rpc.com', chainId: 137 },
+            // BNB Smart Chain
+            { rpcUrl: 'https://bsc-dataseed.binance.org', chainId: 56 },
           ]),
           new OAuthExtension(),
         ],

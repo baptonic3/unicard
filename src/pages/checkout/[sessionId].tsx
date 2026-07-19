@@ -50,30 +50,16 @@ const LIGHT = {
 export default function CheckoutPage({ session, item }: CheckoutPageProps) {
   const router = useRouter();
   const { token, setToken } = useMagic();
-  const { accountInfo, primaryAssets, isDelegated, ensureDelegated, undelegate } = useUniversalAccount();
+  const { accountInfo, primaryAssets } = useUniversalAccount();
   const address = accountInfo?.ownerAddress || '';
   const evmSmartAccount = accountInfo?.evmSmartAccount || '';
   const solanaSmartAccount = accountInfo?.solanaSmartAccount || '';
   const primaryBalance = Number(primaryAssets?.totalAmountInUSD ?? 0).toFixed(2);
   const [mounted, setMounted] = useState(false);
-  const [delegationLoading, setDelegationLoading] = useState(false);
   const [purchaseResult, setPurchaseResult] = useState<{
     passId: number; arbTxHash: string; particleTxId: string;
   } | null>(null);
   const [redirectTimer, setRedirectTimer] = useState(13);
-
-  const handleToggleDelegation = async () => {
-    if (delegationLoading) return;
-    setDelegationLoading(true);
-    try {
-      if (isDelegated) await undelegate();
-      else await ensureDelegated();
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setDelegationLoading(false);
-    }
-  };
 
   const { display: timerDisplay, expired: sessionExpired } = useCountdown(session.expiresAt);
   const hasEnough = Number(primaryAssets?.totalAmountInUSD ?? 0) >= item.priceUSDC;
@@ -431,25 +417,9 @@ export default function CheckoutPage({ session, item }: CheckoutPageProps) {
                   </div>
                 </div>
                   
-                  {/* Toggle Switch */}
-                  <div 
-                    style={{ 
-                      display: 'flex', alignItems: 'center', gap: '8px', 
-                      cursor: delegationLoading ? 'not-allowed' : 'pointer', 
-                      opacity: delegationLoading ? 0.8 : 1,
-                      transform: delegationLoading ? 'scale(0.96)' : 'scale(1)',
-                      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
-                    }} 
-                    onClick={handleToggleDelegation}
-                  >
-                    <span style={{ fontSize: '13px', fontWeight: 600, color: isDelegated ? '#00e599' : t.subtext, transition: 'color 0.2s' }}>{isDelegated ? 'On' : 'Off'}</span>
-                    <div style={{ width: '40px', height: '24px', background: delegationLoading ? '#94a3b8' : (isDelegated ? '#00e599' : '#cbd5e1'), borderRadius: '12px', position: 'relative', transition: 'background 0.3s' }}>
-                      <div style={{ width: '20px', height: '20px', background: '#fff', borderRadius: '50%', position: 'absolute', top: '2px', left: isDelegated ? '18px' : '2px', transition: 'left 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        {delegationLoading && (
-                          <div style={{ width: '12px', height: '12px', border: '2px solid rgba(0,0,0,0.1)', borderTopColor: '#64748b', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-                        )}
-                      </div>
-                    </div>
+                  {/* Status Pill */}
+                  <div style={{ display: 'flex', alignItems: 'center', background: '#f0fdf4', padding: '4px 10px', borderRadius: '12px', border: '1px solid #bbf7d0' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 600, color: '#15803d' }}>Auto-delegating</span>
                   </div>
                 </div>
               </div>

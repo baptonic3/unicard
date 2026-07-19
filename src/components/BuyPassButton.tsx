@@ -37,7 +37,7 @@ export default function BuyPassButton({
   sessionId,
   onSuccess,
 }: BuyPassButtonProps) {
-  const { universalAccount, signAndSend, refreshBalance } = useUniversalAccount();
+  const { universalAccount, signAndSend, refreshBalance, delegateOnChain, refreshDelegationStatus } = useUniversalAccount();
   const router = useRouter();
   const [txStep, setTxStep] = useState<TxStep>('idle');
   const [errorMsg, setErrorMsg] = useState<string>('');
@@ -138,7 +138,38 @@ export default function BuyPassButton({
 
       console.log('🛒 Transaction built, rootHash:', transaction.rootHash);
 
-      // ── Step 2: Sign + broadcast (inline 7702 if needed) ──
+      // ── Step 1.5: Pre-delegate any undelegated source chains ──
+      // The UA SDK may route funds from multiple chains. If any source chain
+      // is not yet EIP-7702 delegated, we must do it BEFORE signing — otherwise
+      // the bundler can't call validateUserOp on that chain → AA24.
+      const chainsToDelegate: number[] = (transaction.userOps ?? [])
+        .filter((op: any) => op.eip7702Auth && !op.eip7702Delegated)
+        .map((op: any) => op.eip7702Auth?.chainId || op.chainId)
+        .filter((id: number, idx: number, arr: number[]) => arr.indexOf(id) === idx); // de-dup
+
+      if (chainsToDelegate.length > 0) {
+        console.log('🛒 Pre-delegating source chains:', chainsToDelegate);
+        for (const chainId of chainsToDelegate) {
+          await delegateOnChain(chainId);
+        }
+        // Give the delegation txs ~5 s to land before rebuilding
+        console.log('🛒 Waiting for delegation txs to settle...');
+        await new Promise((r) => setTimeout(r, 5000));
+        await refreshDelegationStatus();
+
+        // Rebuild — now all chains should report eip7702Delegated: true
+        console.log('🛒 Rebuilding transaction after delegation...');
+        const rebuilt = await universalAccount.createUniversalTransaction({
+          chainId: CHAIN_ID.ARBITRUM_MAINNET_ONE,
+          expectTokens: [{ type: SUPPORTED_TOKEN_TYPE.USDC, amount: usdcAmount }],
+          transactions: [{ to: USDC_ARBITRUM_ADDRESS, data: transferCalldata, value: '0x0' }],
+        });
+        console.log('🛒 Rebuilt rootHash:', rebuilt.rootHash, '| undelegated ops:', (rebuilt.userOps ?? []).filter((op: any) => op.eip7702Auth && !op.eip7702Delegated).length);
+        // Use the rebuilt transaction from here on
+        Object.assign(transaction, rebuilt);
+      }
+
+      // ── Step 2: Sign + broadcast ──
       setTxStep('signing');
       const { transactionId } = await signAndSend(transaction);
       console.log('🛒 TX broadcast! particleTxId:', transactionId);
