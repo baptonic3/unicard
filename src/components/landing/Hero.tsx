@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { PERSONAS, Persona } from './content';
 import { PlayIcon } from './icons';
 import { CREATE_WALLET_PATH } from './links';
@@ -12,15 +12,8 @@ interface HeroProps {
 export default function Hero({ persona, onPersonaChange }: HeroProps) {
   const content = PERSONAS[persona];
   const [playing, setPlaying] = useState(false);
-  const [videoFailed, setVideoFailed] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
 
-  const startVideo = () => {
-    if (videoFailed) return;
-    setPlaying(true);
-    // play() may reject if the file is missing; onError handles the fallback
-    requestAnimationFrame(() => videoRef.current?.play().catch(() => setVideoFailed(true)));
-  };
+  const startVideo = () => setPlaying(true);
 
   return (
     <section className="lp-hero">
@@ -53,25 +46,23 @@ export default function Hero({ persona, onPersonaChange }: HeroProps) {
       </div>
 
       <div className="lp-video" onClick={playing ? undefined : startVideo}>
-        {playing && !videoFailed ? (
-          <video
-            ref={videoRef}
+        {playing ? (
+          <iframe
             className="lp-video-el"
-            src={content.videoSrc}
-            controls
-            playsInline
-            onError={() => {
-              setVideoFailed(true);
-              setPlaying(false);
-            }}
+            src={`https://www.youtube-nocookie.com/embed/${content.youtubeId}?autoplay=1&rel=0`}
+            title="UniCard demo video"
+            allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+            allowFullScreen
           />
         ) : (
           <>
+            <img className="lp-video-poster" src="/videos/hero-poster.jpg" alt="" aria-hidden="true" />
+            <div className="lp-video-overlay" />
             <button className="lp-video-play" aria-label="Play demo video" onClick={startVideo}>
               <PlayIcon size={26} color="#062018" />
             </button>
             <span className="lp-video-chip">
-              <PlayIcon size={10} color="#ffffff" /> {videoFailed ? 'Demo video coming soon' : content.videoLabel}
+              <PlayIcon size={10} color="#ffffff" /> {content.videoLabel}
             </span>
           </>
         )}
@@ -159,6 +150,21 @@ export default function Hero({ persona, onPersonaChange }: HeroProps) {
           height: 100%;
           object-fit: cover;
           display: block;
+          border: 0;
+        }
+        .lp-video-poster {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+        }
+        .lp-video-overlay {
+          position: absolute;
+          inset: 0;
+          background: var(--lp-dark-gradient);
+          opacity: 0.5;
         }
         .lp-video-play {
           position: absolute;

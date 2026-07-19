@@ -9,7 +9,7 @@ export interface PersonaContent {
   heroTitle: [string, string];
   heroSub: string;
   videoLabel: string;
-  videoSrc: string;
+  youtubeId: string;
   stepsTitle: string;
   stepsSub: string;
   steps: StepItem[];
@@ -20,8 +20,8 @@ export const PERSONAS: Record<Persona, PersonaContent> = {
     heroTitle: ['Your universal', 'crypto wallet'],
     heroSub:
       'Pay for anything with any token — UniCard handles cross-chain routing automatically. One balance, any chain.',
-    videoLabel: 'Demo recording · 2:14',
-    videoSrc: '/videos/wallet-demo.mp4',
+    videoLabel: 'UXmaxx Hackathon · 2026',
+    youtubeId: 'yiQNPOPUZo8',
     stepsTitle: 'The easiest way to pay with crypto',
     stepsSub:
       'Sign in with a passwordless method, pay with assets on any supported chain, and access your purchase in seconds.',
@@ -52,8 +52,8 @@ export const PERSONAS: Record<Persona, PersonaContent> = {
     heroTitle: ['Accept any token.', 'Settle on Arbitrum.'],
     heroSub:
       'The chain-abstracted checkout engine — customers pay with any asset on any chain, you receive USDC on Arbitrum.',
-    videoLabel: 'Checkout demo · 1:48',
-    videoSrc: '/videos/checkout-demo.mp4',
+    videoLabel: 'UXmaxx Hackathon · 2026',
+    youtubeId: 'yiQNPOPUZo8',
     stepsTitle: 'The Stripe checkout of Web3',
     stepsSub:
       'Integrate UniCard in minutes. Let customers pay with any asset on any chain, while you receive USDC on Arbitrum with instant on-chain receipts.',
