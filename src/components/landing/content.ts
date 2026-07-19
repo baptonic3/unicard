@@ -89,9 +89,14 @@ export interface FaqItem {
 
 export const FAQ_ITEMS: FaqItem[] = [
   {
-    question: 'What is EIP-7702 — and is it reversible?',
+    question: 'Is UniCard only for event tickets?',
     answer:
-      'EIP-7702 lets your regular wallet (EOA) act as a smart account through a delegation transaction. UniCard uses it so you can pay from a single balance across chains, with each payment routed through the best token and network. The delegation is fully reversible — you can revoke it at any time and your EOA stays a standard EOA.',
+      'No. UniCard is a generic checkout engine. Event ticketing is the demo use case. The same contract can issue passes for memberships, digital goods, gaming items, or any access-gated product.',
+  },
+  {
+    question: 'What is EIP-7702 and why does it matter?',
+    answer:
+      'EIP-7702 lets your regular wallet (EOA) act as a smart account through a delegation transaction. UniCard uses it so you can pay from a single balance across chains, with each payment routed through the best token and network without changing the wallet address. Users keep their original address forever.',
   },
   {
     question: 'Which chains and tokens are supported?',
@@ -113,9 +118,9 @@ export const FAQ_ITEMS: FaqItem[] = [
     answer:
       'Your funds always settle as a single asset on a single chain — USDC on Arbitrum One — no matter what your buyer paid with. That means no exposure to volatile tokens, one treasury to manage, and every settlement comes with a webhook and an Arbiscan-verifiable on-chain receipt.',
   },
-  // {
-  //   question: 'Do I need gas on every chain?',
-  //   answer:
-  //     'No. Gas is abstracted away by the Universal Account — network fees are covered from the payment itself, so you never need to top up ETH, SOL, or any other gas token on any chain.',
-  // },
+  {
+    question: 'Why not ERC-1155?',
+    answer:
+      'For the hackathon, a lightweight custom registry saves gas and development time. Production upgrade path is a standard ERC-1155 drop-in replacement — same contract interface, just adds NFT metadata and wallet display support.',
+  },
 ];
