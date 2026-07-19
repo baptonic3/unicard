@@ -435,38 +435,45 @@ export default function CheckoutPage({ session, item }: CheckoutPageProps) {
 export const getServerSideProps: GetServerSideProps = async ({ params }) => {
   const sessionId = params?.sessionId as string;
 
-  const session = await db.checkoutSession.findUnique({
-    where: { id: sessionId },
-    include: { item: true },
-  });
+  try {
+    const session = await db.checkoutSession.findUnique({
+      where: { id: sessionId },
+      include: { item: true },
+    });
 
-  if (!session) return { notFound: true };
+    if (!session) return { notFound: true };
 
-  if (session.status === 'open' && new Date() > session.expiresAt) {
-    await db.checkoutSession.update({ where: { id: sessionId }, data: { status: 'expired' } });
-  }
+    if (session.status === 'open' && new Date() > session.expiresAt) {
+      await db.checkoutSession.update({ where: { id: sessionId }, data: { status: 'expired' } });
+    }
 
-  const item: AccessItemData = {
-    id: session.item.id,
-    slug: session.item.slug,
-    title: session.item.title,
-    description: session.item.description,
-    imageUrl: session.item.imageUrl ?? null,
-    priceUSDC: session.item.priceUSDC,
-    chainItemId: session.item.chainItemId ?? null,
-    active: session.item.active,
-  };
+    const item: AccessItemData = {
+      id: session.item.id,
+      slug: session.item.slug,
+      title: session.item.title,
+      description: session.item.description,
+      imageUrl: session.item.imageUrl ?? null,
+      priceUSDC: session.item.priceUSDC,
+      chainItemId: session.item.chainItemId ?? null,
+      active: session.item.active,
+    };
 
-  return {
-    props: {
-      session: {
-        id: session.id,
-        successUrl: session.successUrl,
-        cancelUrl: session.cancelUrl,
-        status: session.status,
-        expiresAt: session.expiresAt.toISOString(),
+    return {
+      props: {
+        session: {
+          id: session.id,
+          successUrl: session.successUrl,
+          cancelUrl: session.cancelUrl,
+          status: session.status,
+          expiresAt: session.expiresAt.toISOString(),
+        },
+        item,
       },
-      item,
-    },
-  };
+    };
+  } catch (err: any) {
+    console.error('[checkout][getServerSideProps] FATAL ERROR:', err?.message ?? err);
+    // Re-throw so Next.js returns a 500 — error is now visible in Vercel function logs
+    throw err;
+  }
 };
+
