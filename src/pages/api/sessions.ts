@@ -34,7 +34,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       },
     });
 
-    const checkoutUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/checkout/${session.id}`;
+    // Derive host from request so this works on localhost, Vercel preview, and production
+    const proto = req.headers['x-forwarded-proto'] ?? 'http';
+    const host = req.headers['x-forwarded-host'] ?? req.headers.host ?? 'localhost:3000';
+    const baseUrl = `${proto}://${host}`;
+    const checkoutUrl = `${baseUrl}/checkout/${session.id}`;
 
     return res.status(201).json({ sessionId: session.id, checkoutUrl });
   }
