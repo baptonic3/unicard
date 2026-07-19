@@ -1,25 +1,11 @@
 import '@/styles/globals.css';
 import type { AppProps } from 'next/app';
-import MagicProvider from '@/hooks/MagicProvider';
-import { useMagic } from '@/hooks/MagicProvider';
-import { UniversalAccountProvider } from '@/hooks/UniversalAccountProvider';
-import Header from '@/components/Header';
+import dynamic from 'next/dynamic';
 
-// Inner component so it can consume MagicContext (token/setToken)
-function AppInner({ Component, pageProps }: AppProps) {
-  const { token, setToken } = useMagic();
-  return (
-    <UniversalAccountProvider>
-      {/* <Header token={token} setToken={setToken} /> */}
-      <Component {...pageProps} token={token} setToken={setToken} />
-    </UniversalAccountProvider>
-  );
-}
+// Load SDK-heavy providers client-side only to prevent ERR_REQUIRE_ESM
+// from @particle-network/universal-account-sdk during SSR on Vercel.
+const Providers = dynamic(() => import('@/components/Providers'), { ssr: false });
 
 export default function App(props: AppProps) {
-  return (
-    <MagicProvider>
-      <AppInner {...props} />
-    </MagicProvider>
-  );
+  return <Providers {...props} />;
 }
