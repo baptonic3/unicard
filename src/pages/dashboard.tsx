@@ -13,7 +13,7 @@ import PassCard from '@/components/PassCard';
 export default function Dashboard() {
   const router = useRouter();
   const { token, setToken } = useMagic();
-  const { accountInfo, primaryAssets, isDelegated } = useUniversalAccount();
+  const { accountInfo, primaryAssets } = useUniversalAccount();
   const [address, setAddress] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
   const [passes, setPasses] = useState<any[]>([]);
@@ -233,11 +233,8 @@ export default function Dashboard() {
                           <h3 style={{ fontSize: '18px', fontWeight: 700 }}>EIP-7702 Delegation</h3>
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <span style={{ fontSize: '13px', fontWeight: 600, color: '#00e599' }}>{isDelegated ? 'Active' : 'Unsigned'}</span>
-                          <div style={{ width: '40px', height: '24px', background: isDelegated ? '#00e599' : '#cbd5e1', borderRadius: '12px', position: 'relative' }}>
-                            <div style={{ width: '20px', height: '20px', background: '#fff', borderRadius: '50%', position: 'absolute', top: '2px', left: isDelegated ? '18px' : '2px', transition: 'left 0.2s' }}></div>
-                          </div>
+                        <div style={{ display: 'flex', alignItems: 'center', background: '#f0fdf4', padding: '4px 10px', borderRadius: '12px', border: '1px solid #bbf7d0' }}>
+                          <span style={{ fontSize: '12px', fontWeight: 600, color: '#15803d' }}>Auto-delegating</span>
                         </div>
                       </div>
                       
